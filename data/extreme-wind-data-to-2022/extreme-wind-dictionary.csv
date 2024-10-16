@@ -1,0 +1,8 @@
+﻿"Statistic","Highest max gust is maximum wind speed recorded, average max gust is monthly average calculated from highest 10min daily average, days above p99 is number of days above the 99th percentile calculated for all available daily data for each site."
+"Site","NIWA climate site."
+"Unit","Unit of data value (recorded wind speed or days above 99th percentile)."
+"Lat","Approx. lattitude location of NIWA climate stations to represent a site."
+"Lon","Approx. longitude location of NIWA climate stations to represent a site."
+"Year","Year representing data value."
+"Month","Month representing data value. A month needed 100% of daily values to be caculated."
+"Data value","Calculated wind speed per given month and statistic."

@@ -1,0 +1,31 @@
+﻿site,slope_decade,conf_low_9,conf_low_6.6,conf_high_9,conf_high_6.6,trend_likelihood
+Auckland (Auckland),0.23,0.17,0.2,0.3,0.27,Very likely increasing
+Blenheim (Marlborough),0.14,0.07,0.1,0.21,0.18,Very likely increasing
+Christchurch (Canterbury),0.1,0.03,0.06,0.17,0.14,Very likely increasing
+Dannevirke (Manawatu-Whanganui),0.22,0.13,0.17,0.31,0.27,Very likely increasing
+Dunedin (Otago),0.07,0,0.03,0.13,0.1,Very likely increasing
+Gisborne (Gisborne),0.25,0.19,0.21,0.32,0.29,Very likely increasing
+Gore (Southland),0.23,0.16,0.19,0.3,0.27,Very likely increasing
+Hamilton (Waikato),0.17,0.1,0.13,0.25,0.22,Very likely increasing
+Hokitika (West Coast),0.17,0.09,0.13,0.25,0.21,Very likely increasing
+Invercargill (Southland),0.19,0.13,0.16,0.26,0.23,Very likely increasing
+Kerikeri (Northland),0.19,0.12,0.15,0.26,0.23,Very likely increasing
+Lake Tekapo (Canterbury),0.04,-0.04,-0.01,0.13,0.09,Likely increasing
+Masterton (Wellington),0.18,0.11,0.14,0.26,0.23,Very likely increasing
+Milford Sound (Southland),0.2,0.12,0.15,0.28,0.25,Very likely increasing
+Napier (Hawke's Bay),0.17,0.1,0.13,0.24,0.21,Very likely increasing
+Nelson (Nelson),0.28,0.22,0.25,0.35,0.32,Very likely increasing
+New Plymouth (Taranaki),0.17,0.11,0.13,0.24,0.21,Very likely increasing
+Queenstown (Otago),0.2,0.13,0.16,0.27,0.24,Very likely increasing
+Reefton (West Coast),0.27,0.19,0.23,0.35,0.32,Very likely increasing
+Rotorua (Bay of Plenty),0.1,0.03,0.06,0.18,0.15,Very likely increasing
+Tara Hills (Canterbury),0.24,0.16,0.19,0.31,0.28,Very likely increasing
+Taumarunui (Manawatu-Whanganui),0.08,-0.01,0.03,0.16,0.13,Likely increasing
+Taupo (Waikato),0.11,0.03,0.07,0.19,0.16,Very likely increasing
+Tauranga (Bay of Plenty),0.25,0.18,0.21,0.32,0.29,Very likely increasing
+Timaru (Canterbury),0.06,-0.01,0.02,0.13,0.1,Very likely increasing
+Waiouru (Manawatu-Whanganui),0.2,0.12,0.15,0.29,0.25,Very likely increasing
+Wellington (Wellington),0.17,0.1,0.13,0.24,0.21,Very likely increasing
+Whanganui (Manawatu-Whanganui),0.19,0.11,0.14,0.26,0.23,Very likely increasing
+Whangaparaoa (Auckland),0.19,0.12,0.15,0.26,0.23,Very likely increasing
+Whangarei (Northland),0.25,0.18,0.21,0.31,0.29,Very likely increasing
