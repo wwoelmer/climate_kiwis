@@ -1,6 +1,10 @@
 #######################################################################
 ## read in wind data
+wnd <- read.csv('./data/extreme-wind-data-to-2022/extreme-wind-trends-1980-2022.csv') %>% 
+  filter(method=="Sen's slope") %>% 
+  select(site, statistic, slope)
 
+sen <- read.csv('./data/output/sen_slope_LWST_annual_mean_17_sites.csv')
 
 b <- left_join(wnd, sen, by = 'site') %>% 
   rename(wind_slope = slope)
@@ -16,6 +20,8 @@ wind_wtemp <- b %>%
   ylab('Rate of change in surface temp') +
   xlab('Rate of change in wind per decade (mm)') +
   theme(legend.position = 'none')
+
+wind_wtemp
 
 ggarrange(wtemp_atemp, wtemp_rain, wind_wtemp)
 
