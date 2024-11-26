@@ -6,6 +6,7 @@ library(trend)
 library(ggridges)
 library(ggpubr)
 library(scales)
+library(RColorBrewer)
 
 d <- readRDS('./data/lernzmp_lakes_master.rds')
 d2 <- d$updated 
