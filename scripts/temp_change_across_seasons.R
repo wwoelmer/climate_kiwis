@@ -1,4 +1,12 @@
-# look at warming trends by season
+# estimate warming trends by season
+library(broom)
+library(tidyverse)
+#install.packages('trend')
+library(trend)
+library(ggridges)
+library(ggpubr)
+library(scales)
+library(RColorBrewer)
 
 # lake surface water temp data
 rstemp <- readRDS('./data/lernzmp_lakes_obs_rs.rds')
@@ -49,6 +57,9 @@ data_sub <- data_sub %>%
          season = ifelse(month(Date) %in% c(6, 7, 8), 'winter', season),
          season = ifelse(month(Date) %in% c(9, 10, 11), 'spring', season))
 
+# set season as ordered factor
+data_sub$season <- factor(data_sub$season, levels = c('spring', 'summer',
+                                                      'autumn', 'winter'))
 
 # take annual mean by season
 data_sub <- data_sub %>% 
@@ -90,20 +101,33 @@ ggplot(sen, aes(x = sen_slope, y = district, fill = n_lakes)) +
   facet_wrap(~season) +
   geom_vline(xintercept = 0) 
 
-ggplot(sen, aes(x = sen_slope, y = district)) +
-  geom_density_ridges() +
-  xlab('Rate of change') +
-  facet_wrap(~season) +
-  geom_vline(xintercept = 0) 
-
 length(unique(sen$LID))
 
-ggplot(sen, aes(x = season, y = sen_slope, fill = season)) +
+lswt_season <- ggplot(sen, aes(x = season, y = sen_slope, fill = season)) +
   geom_boxplot() +
   geom_jitter(alpha = 0.1) +
-  theme_bw()
+  theme_bw() +
+  scale_fill_manual(values = c("#A8D08D", "#EE6C4D","#FFB84D", "#96C0B7")) +
+  geom_hline(yintercept = 0, size = 1) +
+  stat_compare_means(method = 'anova') +
+#  stat_compare_means(comparisons = list(c("spring", "summer"), c("spring", "autumn"), c("spring", "winter"), 
+#                                        c("summer", "autumn"), c("summer", "winter"), c("autumn", "winter")), 
+#                     method = "t.test") +
+  ylab('Rate of change in LSWT (°C/decade)') +
+  xlab('Season') +
+  theme(legend.position = 'none')
+lswt_season
 
+ggsave('./figures/rate_of_change_season.png', lswt_season, 
+       dpi = 300, units = 'mm', height = 400, width = 450, scale = 0.3)
 
+summ <- sen %>% 
+  group_by(season) %>% 
+  summarise(mean_temp_change = mean(sen_slope),
+            sd_temp_change = sd(sen_slope))
+summ
+
+##################################################################################
 ##################################################################################
 ## add in geomorphic characteristics
 d <- readRDS('./data/lernzmp_lakes_master.rds')
@@ -121,10 +145,6 @@ ggplot(sen_geo, aes(x = easting_NZTM, y = northing_NZTM, color = sen_slope)) +
   scale_color_gradientn(colors = c('red', 'darkgoldenrod1', 'darkblue')) +
   facet_wrap(~season)
 
-summ <- sen %>% 
-  group_by(season) %>% 
-  summarise(mean_temp_change = mean(sen_slope))
-summ
 
 summ_district <- sen %>% 
   group_by(season, district) %>% 
