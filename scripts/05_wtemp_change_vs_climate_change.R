@@ -1,6 +1,7 @@
 # script to relate LSWT rate of change to rate of change in climate variables
 ##################################################################################
 library(tidyverse)
+library(RColorBrewer)
 
 # read LSWT output
 sen <- read.csv('./data/output/sen_slope_LSWT_annual_mean_30_districts.csv')
@@ -22,10 +23,6 @@ rain <- read.csv('./data/annual-maximum-one-day-rainfall-trends-1960-2022.csv') 
   group_by(district) %>% 
   mutate(slope_rain = mean(slope_rain)) %>% 
   distinct(district, .keep_all = TRUE)
-
-drought_freq <- read.csv('./data/meteorological-drought-frequency-trends-1972-2022.csv') %>% 
-  separate(site, into = c('city', 'region'), sep = " \\(|\\)", remove = TRUE) 
-
 
 df <- left_join(sen, temp, by = 'district')
 df <- left_join(df, rain, by = 'district')
@@ -85,6 +82,32 @@ wtemp_atemp <- ggplot(df, aes(x = slope_temp, y = sen_slope, fill = city)) +
   ylab('Rate of change in surface temp (C/year)') +
   xlab('Rate of change in air temp per decade (C)')
 wtemp_atemp
+
+########################################################################
+## some messy stuff for testing diff models
+### run linear mixed effects model
+library(lme4)
+library(Matrix)
+model <- lmer(sen_slope ~ slope_temp + (slope_temp | city), data = df)
+
+library(nlme)
+
+# GLS with correlation structure
+model <- gls(sen_slope ~ slope_temp, correlation = corCompSymm(form = ~ 1 | city), data = df)
+summary(model)
+
+model_lm <- lm(sen_slope ~ slope_temp + slope_rain, data = df)
+summary(model_lm)
+
+model <- df %>% 
+nest() %>% # Nest data into a list-column
+  mutate(
+    mod = map(data, ~ gls(sen_slope ~ slope_temp, correlation = corCompSymm(form = ~ 1 | city), data = .x)), # Fit models
+    p_value = map_dbl(mod, ~ summary(.x)$coefficients[2, 4]), # Extract p-values
+    adj_r_squared = map_dbl(mod, ~ summary(.x)$adj.r.squared) # Extract adjusted R-squared
+  ) %>%
+  select(p_value, adj_r_squared) %>% # Keep only desired columns
+  distinct(p_value, .keep_all = TRUE) # Remove duplicates based on `p_value`
 
 # run linear model
 lm_temp <- df %>% 
