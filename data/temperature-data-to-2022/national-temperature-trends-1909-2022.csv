@@ -1,0 +1,2 @@
+﻿"data_released","source","p_value","slope","conf_low","conf_high","conf_level","intercept","r_squared","sigma","trend_method","n","period_start","period_end"
+2023,"NIWA 7 Station",5.3019642486797e-15,0.011041210182053826,0.00864834414132304,0.013434076222784612,0.95,-1.0123257258189724,0.4220506204956512,0.42896340091031154,"Linear model",114,1909,2022

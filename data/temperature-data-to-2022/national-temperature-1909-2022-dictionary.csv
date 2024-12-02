@@ -1,0 +1,6 @@
+﻿"year","Year."
+"temperature","Temperature in degrees Celsius."
+"data_released","Year the data was released."
+"source","Source of data."
+"anomaly","Anomaly against a the average temperature of a given reference period."
+"reference_period","Reference period."

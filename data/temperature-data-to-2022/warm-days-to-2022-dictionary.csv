@@ -1,0 +1,6 @@
+﻿"site","NIWA monitoring site"
+"n_days","Number of days"
+"period_start","Start of the period where the number of days were counted"
+"period_end","End of the period where the number of days were counted"
+"lat","Latitude"
+"lon","Longitude"
