@@ -1,0 +1,8 @@
+﻿"site","NIWA 30 stations site"
+"period_start","Start of year"
+"period_end","End of year"
+"reference_period","Climate normal used to identify very wet days"
+"parameter","Parameter [maximum one-day rainfall (mm), number of very wet days, rainfall due to very wet days (%)]"
+"data_value","Data value for parameter"
+"lat","Latitude"
+"lon","Longitude"
