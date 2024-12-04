@@ -17,7 +17,8 @@ d2 <- d2 %>%
 geo <- d$updated %>% 
   select(id_final, area, easting_NZTM, northing_NZTM, max_depth, mean_depth, GeomorphicType) %>% 
   separate(id_final, into = c("char", "LID"), sep = " ") %>% 
-  filter(!is.na(LID)) %>% 
+  filter(!is.na(LID),
+         char=='LID') %>% 
   select(-char)
 
 rstemp <- readRDS('./data/lernzmp_lakes_obs_rs.rds')
