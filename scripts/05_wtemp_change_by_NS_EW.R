@@ -7,9 +7,10 @@ sen <- read.csv('./data/output/sen_slope_LSWT_annual_mean_30_districts.csv')
 xy <- readRDS('./data/lernzmp_lakes_master.rds')
 xy <- xy$updated 
 xy <- xy %>% 
-  select(id_final, area, easting_NZTM, northing_NZTM, max_depth, mean_depth, GeomorphicType) %>% 
+  select(id_final, name_fenz, area, easting_NZTM, northing_NZTM, max_depth, mean_depth, GeomorphicType) %>% 
   separate(id_final, into = c("char", "LID"), sep = " ") %>% 
-  filter(!is.na(LID)) %>% 
+  filter(!is.na(LID),
+         char=='LID') %>% 
   select(-char)
 xy$LID <- as.numeric(xy$LID)
 
@@ -80,7 +81,9 @@ n_wtemp <- ggplot(df, aes(x = northing_NZTM, y = sen_slope, color = region)) +
   scale_color_manual(values = colors) +
   ylab('Rate of change in LSWT (°C/decade)') +
   xlab('Northing')
-
+n_wtemp
+library(plotly)
+ggplotly(n_wtemp)
 NSEW_LSWT <- ggarrange(e_wtemp, n_wtemp, common.legend = TRUE)
 ggsave('./figures/rate_of_change_NSEW.png', NSEW_LSWT, 
        dpi = 300, units = 'mm', height = 400, width = 700, scale = 0.3)
