@@ -31,7 +31,8 @@ data <- data %>%
 # calculate the rate of change by region
 data <- data %>% 
   separate(lake_id, into = c("char", "LID"), sep = " ") %>% 
-  filter(!is.na(LID)) 
+  filter(!is.na(LID),
+         char=='LID') 
 
 ### do some filtering of lakes with very few obs
 data <- data %>% 
