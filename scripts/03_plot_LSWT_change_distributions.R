@@ -113,8 +113,11 @@ ggsave('./figures/SI_figs/distribution_LSWT_change_islands.png', figSI_islands,
 reg_trend <- sen %>% 
   group_by(region) %>% 
   summarise(mean_sen = mean(sen_slope, na.rm = TRUE),
-            sd = sd(sen_slope, na.rm = TRUE))
+            sd = sd(sen_slope, na.rm = TRUE),
+            n_lakes = n())
 
 reg_trend <- reg_trend %>% 
   mutate(mean_sen = round(mean_sen, 2),
          sd = round(sd, 2))
+reg_trend
+write.csv(reg_trend, './data/output/LSWT_trend_stats_region.csv', row.names = FALSE)
