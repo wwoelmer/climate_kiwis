@@ -84,6 +84,96 @@ df %>%
   ggplot(aes(x = n_lakes, y = district)) +
   geom_col()
 
+# format easting and northing into lat/long
+df_wtemp <- df %>% 
+  select(-lat, -lon) %>% 
+  sf::st_as_sf(coords = c("easting_NZTM", "northing_NZTM"), crs = 2193)   # NZGD2000 / New Zealand Transverse Mercator 2000
+
+# Transform to WGS84 (latitude/longitude)
+sf_data_latlon <- st_transform(df_wtemp, crs = 4326)
+
+# Add lat/lon columns to the original dataframe
+df_wtemp$lat <- st_coordinates(sf_data_latlon)[, 2]
+df_wtemp$lon <- st_coordinates(sf_data_latlon)[, 1]
+
+#################################################################################
+# get country shapefile
+# read from LINZ
+url <- "https://data.linz.govt.nz/"
+layer_id <- 51560
+key <- Sys.getenv("LINZ_API_KEY") # LINZ API key
+
+# Read the shapefile data
+nz_shapefile <- read_web_sf(url = url, layer_id = layer_id, key = key)
+nz_shapefile
+
+# transform lat and long into 
+
+rain <- ggplot() +
+  geom_sf(data = nz_shapefile, fill = NA, color = 'black') +
+  theme_bw() +
+  geom_point(data = df, aes(x = lon, y = lat, color = slope_rain, size = 4)) +
+  scale_color_gradientn(colors = c('red', 'darkgoldenrod1', 'darkgreen')) +
+  labs(color = 'Slope') +
+  ggtitle('Precipitation') +
+  xlab('Longitude') +
+  ylab('Latitude') +
+  guides(size = 'none')
+  
+rain
+
+atemp <-  ggplot() +
+  geom_sf(data = nz_shapefile, fill = NA, color = 'black') +
+  theme_bw() +
+  geom_point(data = df, aes(x = lon, y = lat, color = slope_temp, size = 4))  +
+  scale_color_viridis_c(option = 'plasma') +
+  theme_bw()+
+  labs(color = 'Slope') +
+  ggtitle('Air Temperature') +
+  xlab('Longitude') +
+  ylab('Latitude') +
+  guides(size = 'none')
+atemp
+
+wind <- ggplot() +
+  geom_sf(data = nz_shapefile, fill = NA, color = 'black') +
+  theme_bw() +
+  geom_point(data = b[b$statistic=='Average max gust',], aes(x = lon, y = lat, color = wind_slope, size = 4))  +
+  geom_point(size = 4) +
+  theme_bw() +
+  scale_color_gradient2(low = 'blue', mid = 'yellow', high = 'red',
+                        midpoint = 0) +
+  labs(color = 'Slope') +
+  ggtitle('Average Max Gust') +
+  xlab('Longitude') +
+  ylab('Latitude') +
+  guides(size = 'none')
+wind
+
+wtemp <-  ggplot() +
+  geom_sf(data = nz_shapefile, fill = NA, color = 'black') +
+  theme_bw() +
+  geom_point(data = df_wtemp, aes(x = lon, y = lat, color = sen_slope), size = 2)  +
+  scale_color_gradient2(
+    high = brewer.pal(9, "RdBu")[1],   # Cold color
+    mid = "ivory",                    # Midpoint (neutral color)
+    low = brewer.pal(9, "RdBu")[9],  # Hot color
+    midpoint = 0                      # Set midpoint to 0 for diverging effect
+  ) +  #scale_color_viridis_b() +
+  theme_bw() +
+  labs(color = 'Slope') +
+  ggtitle('Water Temperature') +
+  xlab('Longitude') +
+  ylab('Latitude') +
+  guides(size = 'none')
+wtemp
+
+maps <- ggarrange(rain, atemp, wind, wtemp, labels = 'auto')
+maps
+
+ggsave('./figures/maps_climate_vars_LSWT.png', maps,
+       dpi = 300, units = 'mm', height = 500, width = 575, scale = 0.45)
+
 
 ################################################################################
 # display maps of changes in climate vars and lswt
