@@ -101,25 +101,46 @@ ggplot(sen, aes(x = sen_slope, y = district, fill = n_lakes)) +
   facet_wrap(~season) +
   geom_vline(xintercept = 0) 
 
+ggplot(sen, aes(x = sen_slope, y = season, fill = n_lakes)) +
+  geom_density_ridges() +
+  xlab('Rate of change') +
+  facet_wrap(~district) +
+  geom_vline(xintercept = 0) +
+  theme_bw()
+
 length(unique(sen$LID))
 
-lswt_season <- ggplot(sen, aes(x = season, y = sen_slope, fill = season)) +
+lswt_season <- ggplot(sen, aes(y = season, x = sen_slope, fill = season)) +
   geom_boxplot() +
   geom_jitter(alpha = 0.1) +
   theme_bw() +
   scale_fill_manual(values = c("#A8D08D", "#EE6C4D","#FFB84D", "#96C0B7")) +
-  geom_hline(yintercept = 0, size = 1) +
+  geom_vline(xintercept = 0, size = 1) +
   stat_compare_means(method = 'anova') +
 #  stat_compare_means(comparisons = list(c("spring", "summer"), c("spring", "autumn"), c("spring", "winter"), 
 #                                        c("summer", "autumn"), c("summer", "winter"), c("autumn", "winter")), 
 #                     method = "t.test") +
-  ylab('Rate of change in LSWT (°C/decade)') +
-  xlab('Season') +
+  xlab('Rate of change in LSWT (°C/decade)') +
+  ylab('Season') +
   theme(legend.position = 'none')
 lswt_season
 
 ggsave('./figures/rate_of_change_season.png', lswt_season, 
-       dpi = 300, units = 'mm', height = 400, width = 450, scale = 0.3)
+       dpi = 300, units = 'mm', height = 400, width = 450, scale = 0.4)
+
+ggplot(sen, aes(y = season, x = sen_slope, fill = season)) +
+  geom_density_ridges() +
+  geom_jitter(alpha = 0.1) +
+  theme_bw() +
+  scale_fill_manual(values = c("#A8D08D", "#EE6C4D","#FFB84D", "#96C0B7")) +
+  geom_vline(xintercept = 0, size = 1) +
+  #stat_compare_means(method = 'anova') +
+  #  stat_compare_means(comparisons = list(c("spring", "summer"), c("spring", "autumn"), c("spring", "winter"), 
+  #                                        c("summer", "autumn"), c("summer", "winter"), c("autumn", "winter")), 
+  #                     method = "t.test") +
+  ylab('Rate of change in LSWT (°C/decade)') +
+  xlab('Season') +
+  theme(legend.position = 'none')
 
 summ <- sen %>% 
   group_by(season) %>% 
