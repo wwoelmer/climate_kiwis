@@ -40,7 +40,8 @@ data <- data %>%
 # calculate the rate of change by region
 data <- data %>% 
   separate(lake_id, into = c("char", "LID"), sep = " ") %>% 
-  filter(!is.na(LID)) 
+  filter(!is.na(LID),
+         char=='LID') 
 
 ### do some filtering of lakes with very few obs
 data <- data %>% 
@@ -59,12 +60,12 @@ ggplot(data, aes(x = n_lakes, y = district, fill = district)) +
   ggtitle('All lakes') +
   theme(legend.position = 'none')
 
-data_sub <- data %>% 
+data <- data %>% 
   filter(n > 10) %>% 
   filter(lake_max_gap <=365) 
 
 # standardize the dates so they are in difference from first date (in months)
-data_sub <- data_sub %>% 
+data_sub <- data %>% 
   group_by(LID) %>% 
   mutate(first_date = min(Date),
          date_diff = difftime(Date, first_date, units = 'days'))
@@ -93,6 +94,13 @@ sen <- data_sub %>%
   summarise(sen_slope = sens.slope(mean_temp)$estimates,
             sen_signif = sens.slope(mean_temp)$p.value)
 sen
+
+sen_all <- data %>% 
+  filter(n > 9) %>% 
+  group_by(district, LID) %>% 
+  summarise(sen_slope = sens.slope(surface_temp)$estimates,
+            sen_signif = sens.slope(surface_temp)$p.value)
+sen_all
 
 compare <- left_join(out, sen, by = c('LID', 'district'))
 
