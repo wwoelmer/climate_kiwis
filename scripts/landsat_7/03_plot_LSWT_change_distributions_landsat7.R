@@ -1,6 +1,8 @@
 # plot LSWT trends distributions
 library(tidyverse)
 library(RColorBrewer)
+library(ggridges)
+library(ggpubr)
 
 # read LSWT output
 sen <- read.csv('./data/output/sen_slope_LSWT_annual_mean_30_districts_landsat7.csv')
@@ -69,19 +71,21 @@ sen <- sen %>%
 
 b <- sen %>% 
   filter(n > 3) %>% 
-  ggplot(aes(x = sen_slope, y = fct_rev(city), fill = region)) +
+  ggplot(aes(x = sen_slope, y = fct_rev(region), fill = region)) +
   geom_density_ridges(scale = 2) +
   xlab('Rate of change in LSWT (°C/decade)') +
   coord_cartesian(clip = 'off') +      # Allow plot to extend beyond the default area
-  ylab('City') +
-  scale_y_discrete(expand = expansion(mult = c(0.05, 0.1))) +  # Add space between ridges
+  ylab('Region') +
+  scale_y_discrete(expand = expansion(mult = c(0.05, 0.12))) +  # Add space between ridges
   scale_fill_manual(values = colors) +
   #facet_wrap(~island, scales = 'free_y') +
   geom_vline(xintercept = 0) +
   labs(fill = 'Region') +
   theme_bw() +
-  theme(text = element_text(size = 14))
+  theme(text = element_text(size = 14),
+        legend.position = 'none')
 b
+
 lswt_rate <- ggarrange(a, b, widths = c(1, 2),
                        labels = 'auto')
 lswt_rate
@@ -92,11 +96,18 @@ ggsave('./figures/landsat_7/rate_of_change_LWST.png', lswt_rate,
 mean_island <- sen %>% 
   group_by(island) %>% 
   summarise(mean_sen = mean(sen_slope, na.rm = TRUE),
+            median_sen = median(sen_slope, na.rm = TRUE),
             max_sen = max(sen_slope, na.rm = TRUE),
             min_sen = min(sen_slope, na.rm = TRUE),
             sd_sen = sd(sen_slope, na.rm = TRUE),
             n_lakes = n())
 mean_island
+
+island_cool_warm <- sen %>% 
+  group_by(island) %>% 
+  summarise(pct_cool = sum(sen_slope < 0)/n(),
+            pct_warm = sum(sen_slope > 0)/n())
+island_cool_warm
 
 figSI_islands <- ggplot(sen, aes(x = sen_slope, fill = island)) +
   geom_density() +
@@ -125,19 +136,49 @@ ggsave('./figures/SI_figs/landsat_7/distribution_LSWT_change_islands.png', figSI
 reg_trend <- sen %>% 
   group_by(region) %>% 
   summarise(mean_sen = mean(sen_slope, na.rm = TRUE),
+            median_sen = median(sen_slope, na.rm = TRUE),
             sd = sd(sen_slope, na.rm = TRUE),
             n_lakes = n())
 
 reg_trend <- reg_trend %>% 
   mutate(mean_sen = round(mean_sen, 2),
+         median_sen = round(median_sen, 2),
          sd = round(sd, 2))
 reg_trend
 
-#write.csv(reg_trend, './data/output/LSWT_trend_stats_region.csv', row.names = FALSE)
+summary_trends <- sen %>% 
+  summarise(mean_sen = mean(sen_slope, na.rm = TRUE),
+            median_sen = median(sen_slope, na.rm = TRUE),
+            sd = sd(sen_slope, na.rm = TRUE),
+            n_lakes = n(),
+            pct_cool = sum(sen_slope < 0)/n(),
+            pct_warm = sum(sen_slope > 0)/n())
+
+summary_trends
+write.csv(reg_trend, './data/output/LSWT_trend_stats_region.csv', row.names = FALSE)
 
 #########################################
 ## plot for GLEON poster
-gleon <- ggarrange(a, figSI_islands, b, widths = c(1.1, 1.5, 2),
+
+# do plot b with just regions, no city
+b <- sen %>% 
+  filter(n > 3) %>% 
+  ggplot(aes(x = sen_slope, y = fct_rev(region), fill = region)) +
+  geom_density_ridges(scale = 2) +
+  xlab('Rate of change in LSWT (°C/decade)') +
+  coord_cartesian(clip = 'off') +      # Allow plot to extend beyond the default area
+  ylab('City') +
+  scale_y_discrete(expand = expansion(mult = c(0.05, 0.1))) +  # Add space between ridges
+  scale_fill_manual(values = colors) +
+  #facet_wrap(~island, scales = 'free_y') +
+  geom_vline(xintercept = 0) +
+  labs(fill = 'Region') +
+  theme_bw() +
+  theme(text = element_text(size = 14),
+        legend.position = 'none')
+b
+
+gleon <- ggarrange(a, figSI_islands, b, widths = c(0.7, 0.9, 0.8),
                    labels = 'auto', ncol = 3)
 gleon
 ggsave('./figures/landsat_7/change_over_space_gleon.png', gleon, 
