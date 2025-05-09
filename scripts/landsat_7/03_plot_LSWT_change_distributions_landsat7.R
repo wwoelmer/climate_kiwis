@@ -152,7 +152,8 @@ summary_trends <- sen %>%
             sd = sd(sen_slope, na.rm = TRUE),
             n_lakes = n(),
             pct_cool = sum(sen_slope < 0)/n(),
-            pct_warm = sum(sen_slope > 0)/n())
+            pct_warm = sum(sen_slope > 0)/n(),
+            range = max(sen_slope) - min(sen_slope))
 
 summary_trends
 write.csv(reg_trend, './data/output/LSWT_trend_stats_region.csv', row.names = FALSE)
