@@ -56,11 +56,11 @@ sen$city <- factor(sen$city, levels = c('Kerikeri', 'Whangarei',
 
 a <- ggplot(sen, aes(x = sen_slope)) +
   geom_density(size = 2) +
-  xlab('Rate of change in LSWT (°C/decade)') +
+  xlab('Rate of change in LSWT (°C/year)') +
   ylab('Density') +
   geom_vline(xintercept = 0) +
   theme_bw() +
-  theme(text = element_text(size = 14))
+  theme(text = element_text(size = 12))
 
 # set up color palette
 n_colors <- length(levels(sen$region))
@@ -73,7 +73,7 @@ b <- sen %>%
   filter(n > 3) %>% 
   ggplot(aes(x = sen_slope, y = fct_rev(region), fill = region)) +
   geom_density_ridges(scale = 2) +
-  xlab('Rate of change in LSWT (°C/decade)') +
+  xlab('Rate of change in LSWT (°C/year)') +
   coord_cartesian(clip = 'off') +      # Allow plot to extend beyond the default area
   ylab('Region') +
   scale_y_discrete(expand = expansion(mult = c(0.05, 0.12))) +  # Add space between ridges
@@ -82,7 +82,7 @@ b <- sen %>%
   geom_vline(xintercept = 0) +
   labs(fill = 'Region') +
   theme_bw() +
-  theme(text = element_text(size = 14),
+  theme(text = element_text(size = 12),
         legend.position = 'none')
 b
 
