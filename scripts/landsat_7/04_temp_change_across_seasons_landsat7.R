@@ -1,14 +1,17 @@
 # estimate warming trends by season
 library(broom)
 library(tidyverse)
-#install.packages('trend')
 library(trend)
 library(ggridges)
 library(ggpubr)
 library(scales)
 library(RColorBrewer)
+library(lme4)
+library(lmerTest)  # for p-values
+library(emmeans)
 
-#d <- readRDS('./data/lernzmp_lakes_master.rds')
+
+d <- readRDS('./data/lernzmp_lakes_master.rds')
 d2 <- d$updated 
 d2 <- d2 %>% 
   dplyr::select(id_final:northing_NZTM, name_fenz, area_best, max_depth, mean_depth, GeomorphicType) %>% 
@@ -83,11 +86,11 @@ lswt_season <- ggplot(sen, aes(y = season, x = sen_slope, fill = season)) +
   theme_bw() +
   scale_fill_manual(values = c("#A8D08D", "#EE6C4D","#FFB84D", "#96C0B7")) +
   geom_vline(xintercept = 0, size = 1) +
-  stat_compare_means(method = 'anova') +
+  #stat_compare_means(method = 'anova') +
 #  stat_compare_means(comparisons = list(c("spring", "summer"), c("spring", "autumn"), c("spring", "winter"), 
 #                                        c("summer", "autumn"), c("summer", "winter"), c("autumn", "winter")), 
 #                     method = "t.test") +
-  xlab('Rate of change in LSWT (°C/decade)') +
+  xlab('Rate of change in LSWT (°C/year)') +
   ylab('Season') +
   theme(legend.position = 'none',
         text = element_text(size = 14)) 
@@ -95,6 +98,17 @@ lswt_season
 
 ggsave('./figures/landsat_7/rate_of_change_season.png', lswt_season, 
        dpi = 300, units = 'mm', height = 400, width = 450, scale = 0.3)
+
+# run mixed-effects model to test for statistical differences
+model <- lmer(sen_slope ~ season + (1 | LID), data = sen)
+model
+summary(model)
+anova(model)
+
+# test pairwise differences across seasons
+emmeans(model, pairwise ~ season)
+
+
 
 ggplot(sen, aes(y = season, x = sen_slope, fill = season)) +
   geom_density_ridges() +
@@ -112,10 +126,12 @@ ggplot(sen, aes(y = season, x = sen_slope, fill = season)) +
 
 summ <- sen %>% 
   group_by(season) %>% 
-  summarise(mean_temp_change = mean(sen_slope),
-            sd_temp_change = sd(sen_slope))
+  summarise(mean_temp_change = round(mean(sen_slope), 3),
+            median_temp_change = round(median(sen_slope), 3),
+            sd_temp_change = sd(sen_slope),
+            range = max(sen_slope) - min(sen_slope))
 summ
-
+write.csv(summ, './data/output/LSWT_trends_by_season.csv', row.names = FALSE)
 ##################################################################################
 ##################################################################################
 ## add in geomorphic characteristics
