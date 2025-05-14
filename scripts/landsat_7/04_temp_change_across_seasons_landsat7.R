@@ -134,7 +134,7 @@ summ
 write.csv(summ, './data/output/LSWT_trends_by_season.csv', row.names = FALSE)
 ##################################################################################
 ##################################################################################
-## add in geomorphic characteristics
+## plot map by season
 d <- readRDS('./data/lernzmp_lakes_master.rds')
 geo <- d$updated %>% 
   select(id_final, area, easting_NZTM, northing_NZTM, max_depth, mean_depth, GeomorphicType) %>% 
@@ -147,29 +147,215 @@ sen_geo <- left_join(sen, geo, by = 'LID')
 ggplot(sen_geo, aes(x = easting_NZTM, y = northing_NZTM, color = sen_slope)) + 
   geom_point() +
   theme_bw() +
-  scale_color_gradientn(colors = c('red', 'darkgoldenrod1', 'darkblue')) +
+  scale_color_gradient2(
+    high = 'red',#brewer.pal(9, "RdBu")[2],   # Cold color
+    mid = "#D3D3D3",                    # Midpoint (neutral color)
+    low = 'blue', #brewer.pal(9, "RdBu")[8],  # Hot color
+    midpoint = 0                      # Set midpoint to 0 for diverging effect
+  ) +  #scale_color_viridis_b() +
   facet_wrap(~season)
 
+#################################################################################
+# show how lakes change via season spaghetti plot
+#install.packages('ggalluvial')
+library(ggalluvial)
+# break up LSWT trends into cooling or warming
+sen <- sen %>% 
+  mutate(trend_qual = ifelse(sen_slope > 0, 'warm', 'cool'))
 
-summ_district <- sen %>% 
-  group_by(season, district) %>% 
-  summarise(mean_temp_change = mean(sen_slope))
-summ_district
+ggplot(sen, aes(x = season, stratum = trend_qual, alluvium = LID, fill = trend_qual, label = trend_qual)) +
+  geom_flow() +
+  geom_stratum(width = 0.6)  +
+  scale_fill_manual(values= c('#568EA3', '#B3192B')) +
+  geom_text(
+    stat = "flow",
+    aes(
+      label = after_stat(ifelse(
+        flow == "to",
+        scales::percent(
+          ave(count, x, flow, group, FUN = sum) /
+            ave(count, x, flow, FUN = sum),
+          accuracy = 1
+        ),
+        NA
+      )),
+      hjust = after_stat(flow) == "to"
+    )
+  ) +
+  theme_bw() +
+  labs(fill = 'Trend direction',
+       y = 'Number of lakes',
+       x = 'Season') 
 
-ggplot(sen_geo, aes(x = season, y = sen_slope, fill = district)) +
-  geom_boxplot() +
-  theme(legend.position = 'none')
 
-ggplot(sen_geo, aes(x = season, y = sen_slope, fill = season)) +
-  geom_boxplot() +
-  geom_jitter(alpha = 0.1) +
-  #stat_compare_means(aes(group = as.factor(season)), 
-  #                   label = "p.format", color = 'red',
-                    # label.y.npc = 0.95, label.x.npc = 0.5,
-  #                   label.y = c(1.5, 1.4, 1.3, 1.2),
-  #                   method = 'wilcox.test') +
-  #stat_compare_means(method = 't.test') +
-  theme(legend.position = 'none') +
+ggplot(sen, aes(x = season, fill = trend_qual)) +
+  geom_bar(position = 'dodge') +
+  scale_fill_manual(values= c('#568EA3', '#B3192B')) 
+
+#################################################################################
+# calculate which lakes are consistently cooling, warming, or changing
+sen_summ <- sen %>% 
+  group_by(LID) %>% 
+  summarise(n_cool = sum(trend_qual=='cool'),
+            n_warm = sum(trend_qual=='warm'),
+            cv = sd(sen_slope)/abs(mean(sen_slope))) %>% 
+  mutate(lake_group = case_when(n_cool > 0 & n_warm > 0 ~ 'variable',
+                                n_cool > 0 ~ 'always cooling',
+                                n_warm > 0 ~ 'always warming'))
+
+cool_warm <- sen_summ %>% 
+  count(lake_group) %>% 
+  mutate(percent = 100*n/sum(n))
+
+# combine with annual rates and other explanatory variables
+# read LSWT output
+ann <- read.csv('./data/output/sen_slope_LSWT_annual_mean_30_districts_landsat7.csv')
+
+# bit of cleaning up
+ann <- ann %>% 
+  select(LID, sen_slope) %>% 
+  mutate(LID = as.character(LID)) %>% 
+  rename(annual_trend = sen_slope)
+
+# combine seasonal and annual trends
+season_ann <- left_join(sen, ann)
+
+ggplot(season_ann, aes(x = sen_slope, y = annual_trend, color = season)) +
+  geom_point() +
+  geom_smooth(method = 'lm') +
+  facet_wrap(~season) +
+  theme_bw() +
+  geom_abline(slope = 1, intercept = 0)
+
+# read in FENZ drivers and keann# read in FENZ drivers and keep the relevant ones
+fenz <- read.csv('./data/drivers/FENZ_Lake_Update_2024_25.09.2024.csv')
+fenz$LID <- as.character(fenz$LID)
+fenz <- fenz %>% 
+  select(LID, Name, Geomorphic, NewAreaHa, Region, MaxDepth:SumWind, 
+         MeanWind, LakeElev, catArea, catSlope, catAnnTemp, catDecSolR, catJuneSol,
+         Lat, Long,  Abell_Secc,Per_Snow, River, Sand)
+
+# and get dist_to_shore
+lernz <- readRDS('./data/lernzmp_lakes_master.rds')
+lernz <- as.data.frame(lernz$updated)
+lernz <- lernz %>% 
+  select(-geometry)
+
+# modify the LID col
+lernz <- lernz %>% 
+  separate(id_final, into = c("char", "LID"), sep = " ") %>% 
+  filter(!is.na(LID),
+         char=='LID') %>% 
+  select(-char)
+
+# select relevant variables
+lernz <- lernz %>% 
+  select(LID, dist_to_shore) 
+
+# join together
+df <- left_join(ann, fenz)
+df <- left_join(df, lernz)
+df <- df %>% 
+  select(LID, annual_trend, Region, Name, everything())
+
+df <- left_join(df, sen_summ) 
+df <- df %>% 
+  select(LID, Name, annual_trend, lake_group, cv, everything()) %>% 
+  rename(cv_trend = cv)
+
+write.csv(df, './data/output/LSWT_annual_seasonal_trends_predictors.csv', row.names = FALSE)
+df %>% 
+  filter(cv < 2500) %>% 
+ggplot(aes(y = cv, x = lake_group, color = lake_group)) +
+  geom_point() +
+  geom_hline(yintercept = 0) +
   theme_bw()
 
-pairwise.wilcox.test(sen_geo$sen_slope, sen_geo$season, method = 'BH')
+ggplot(df, aes(y = annual_trend, x = lake_group, color = lake_group)) +
+  geom_point() +
+  geom_hline(yintercept = 0) +
+  theme_bw()
+
+ggplot(df, aes(y = annual_trend, x = dist_to_shore, color = lake_group)) +
+  geom_point() +
+  geom_hline(yintercept = 0) +
+  theme_bw()
+
+ggplot(df, aes(y = MaxDepth, x = lake_group, color = lake_group)) +
+  geom_point() +
+  geom_hline(yintercept = 0) +
+  theme_bw()
+
+df %>% 
+  filter(cv < 2500) %>% 
+ggplot(aes(y = MaxDepth, x = cv, color = lake_group)) +
+  geom_point() +
+  geom_hline(yintercept = 0) +
+  theme_bw()
+
+ggplot(df, aes(y = LakeElev, x = lake_group, color = lake_group)) +
+  geom_point() +
+  geom_hline(yintercept = 0) +
+  theme_bw()
+
+df %>% 
+  filter(DecTemp > 1) %>% 
+ggplot(aes(y = catAnnTemp, x = lake_group, color = lake_group)) +
+  geom_point() +
+  theme_bw()
+
+df <- na.omit(df)
+
+# get rid of super high cv value
+df <- df %>% 
+  filter(cv < 2500)
+
+predictors <- df %>% 
+  select(-n_cool, -n_warm) %>% 
+  select(where(is.numeric))
+
+pca_result <- prcomp(predictors, center = TRUE, scale. = TRUE)
+
+pca_df <- bind_cols(
+  df %>% select(LID, lake_group, cv),
+  as.data.frame(pca_result$x)  # adds PC1, PC2, ...
+)
+
+
+ggplot(pca_df, aes(x = PC1, y = PC2, color = lake_group)) +
+  geom_point(alpha = 0.7, size = 2) +
+  theme_minimal() +
+  labs(
+    title = "PCA of Lake Characteristics",
+    x = paste0("PC1 (", round(summary(pca_result)$importance[2, 1] * 100, 1), "%)"),
+    y = paste0("PC2 (", round(summary(pca_result)$importance[2, 2] * 100, 1), "%)")
+  )
+
+ggplot(pca_df, aes(x = PC1, y = PC2, color = cv)) +
+  geom_point(alpha = 0.7, size = 2) +
+  theme_minimal() +
+  labs(
+    title = "PCA of Lake Characteristics",
+    x = paste0("PC1 (", round(summary(pca_result)$importance[2, 1] * 100, 1), "%)"),
+    y = paste0("PC2 (", round(summary(pca_result)$importance[2, 2] * 100, 1), "%)")
+  ) +
+  scale_color_viridis_b()
+
+loadings <- pca_result$rotation
+loadings_df <- as.data.frame(loadings)
+loadings_df$variable <- rownames(loadings_df)
+
+ggplot(loadings_df, aes(x = PC1, y = PC2, label = variable)) +
+  geom_point() +
+  geom_point(data = pca_df, aes(x = PC1, y = PC2, color = lake_group)) +
+  geom_text(nudge_y = 0.02) +
+  coord_equal() +
+  labs(title = "PCA Loadings Plot", x = "PC1", y = "PC2")
+
+library(vegan)
+
+adonis_result <- adonis2(predictors ~ lake_group, data = df, method = "euclidean")
+print(adonis_result)
+
+ggplot(df, aes(x = Long, y = Lat, color = lake_group)) +
+  geom_point()
