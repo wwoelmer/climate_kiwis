@@ -75,9 +75,12 @@ ggplot(data_sub, aes(x = mean_temp, y = district, fill = district)) +
 sen <- data_sub %>% 
   group_by(district, LID) %>% 
   summarise(sen_slope = sens.slope(mean_temp)$estimates,
-            sen_signif = sens.slope(mean_temp)$p.value)
+            sen_signif = sens.slope(mean_temp)$p.value,
+            median_temp = median(mean_temp),
+            intercept = median_temp - (sen_slope*median_temp))
 sen
 mean(sen$sen_slope)
+
 
 ggplot(sen, aes(x = sen_slope, y = district, fill = district)) +
   geom_density_ridges() +
