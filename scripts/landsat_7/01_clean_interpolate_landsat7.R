@@ -5,6 +5,7 @@ library(geoTS)
 ls <- read.csv('./data/landsat7_data.csv')
 ls <- ls %>% 
   dplyr::select(system.index, LID, Name, LST)
+ls$LID <- as.character(ls$LID)
 
 # extract the date
 ls <- ls %>% 
@@ -21,7 +22,7 @@ ls <- ls %>%
   mutate(year = year(date)) %>% 
   filter(year > 1999 & year < 2024)
 
-ggplot(ls, aes(x = as.Date(date), y = LST, color = LID)) +
+ggplot(ls, aes(x = as.Date(date), y = LST, color = as.numeric(LID))) +
   geom_point() +
   theme_bw() +
   ylab('Lake skin temperature (LST, °C)') +
@@ -30,6 +31,8 @@ ggplot(ls, aes(x = as.Date(date), y = LST, color = LID)) +
   theme(text = element_text(size = 14))
 
 length(unique(ls$LID))
+
+write.csv(ls, './data/landsat7_data_formatted_original_dates.csv', row.names = FALSE)
 
 
 ls %>% 
@@ -45,6 +48,7 @@ ls %>%
         text = element_text(size = 14))
 
 length(unique(ls$LID))
+
 
 #some summary stats, number of years per lake, number of obs per year
 n_year_per_lake <- ls %>% 
@@ -71,7 +75,6 @@ ggplot(n_obs_year, aes(x = year, y = n, group = year, fill = 'blue')) +
   xlab('Date') +
   theme(legend.position = 'none',
         text = element_text(size = 14))
-
 
 
 ################################################################################
@@ -122,6 +125,21 @@ ggplot(n_obs_year, aes(x = year, y = n, group = year, fill = 'blue')) +
   theme(legend.position = 'none',
         text = element_text(size = 14))
 
+ls_mean2 %>% 
+  mutate(month = month(date_dum)) %>% 
+  ggplot(aes(x = as.factor(month))) +
+  geom_histogram(stat = 'count') +
+  xlab('Month') +
+  ylab('Number of observations') +
+  theme_bw()
+
+ls_mean2 %>% 
+  ggplot(aes(x = season)) +
+  geom_histogram(stat = 'count') +
+  xlab('Month') +
+  ylab('Number of observations') +
+  theme_bw()
+
 ################################################################################
 # then linear interpolation to get monthly obs
 # Create complete time series (monthly intervals)
@@ -143,6 +161,13 @@ ls_fill <- ls_fill %>%
   mutate(interp = na.approx(mean_LST, maxgap = 4))
 
 length(unique(ls_fill$LID))
+
+# calculate number of unique lake years
+lyear <- ls_fill %>% 
+  mutate(year = year(date_dum)) %>% 
+  distinct(year, LID) %>% 
+  mutate(lyear = paste0(year, '_', LID))
+length(unique(lyear$lyear))
 
 #### one example lake #######
 ls_fill %>% 
@@ -204,6 +229,10 @@ ls_hants %>%
   ylab('LSWT (°C)') +
   labs(color = '') +
   theme(text = element_text(size = 14))
+
+# calculate the percent of obs that were interpolated
+sum(is.na(ls_hants$mean_LST))/nrow(ls_hants)
+
 
 
 length(unique(ls_hants$LID))
