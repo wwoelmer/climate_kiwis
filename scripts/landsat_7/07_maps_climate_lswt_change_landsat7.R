@@ -4,6 +4,7 @@ library(RColorBrewer)
 library(lubridate)
 library(ggpubr)
 library(sf)
+library(aemetools)
 
 # read LSWT output
 sen <- read.csv('./data/output/sen_slope_LSWT_annual_mean_30_districts_landsat7.csv') %>% 
@@ -180,3 +181,26 @@ maps
 
 ggsave('./figures/landsat_7/maps_climate_vars_LSWT.png', maps,
        dpi = 300, units = 'mm', height = 500, width = 575, scale = 0.45)
+
+
+
+quantile_breaks <- quantile(df_wtemp$area, probs = seq(0, 1, length.out = 7), na.rm = TRUE)
+
+df_wtemp %>% 
+  mutate(size_category = cut(area, 
+                             breaks = quantile_breaks, 
+                             labels = c("VV small", "Very Small", "Small", "Medium", "Large", "Very Large"),
+                             include.lowest = TRUE)) %>% 
+  ggplot(aes(x = area, y = sen_slope)) +
+  geom_point() +
+  facet_wrap(~size_category, scales = 'free_x')
+
+df_wtemp %>% 
+  mutate(size_category = cut(area, 
+                             breaks = quantile_breaks, 
+                             labels = c("VV small", "Very Small", "Small", "Medium", "Large", "Very Large"),
+                             include.lowest = TRUE)) %>% 
+  ggplot(aes(x = log(area), y = log(sen_slope))) +
+  geom_point() +
+  facet_wrap(~size_category, scales = 'free_x')
+
