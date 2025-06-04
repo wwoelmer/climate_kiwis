@@ -5,10 +5,7 @@ library(ggridges)
 library(ggpubr)
 
 # read LSWT output
-sen <- read.csv('./data/output/sen_slope_LSWT_annual_mean_30_districts_landsat7.csv')
-
-# remove district with NA
-sen <- sen %>% 
+sen <- read.csv('./data/output/sen_slope_LSWT_annual_mean_30_districts_landsat7.csv') %>% 
   filter(!is.na(district))
 
 ##################
