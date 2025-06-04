@@ -9,7 +9,8 @@ library(RColorBrewer)
 library(lme4)
 library(lmerTest)  # for p-values
 library(emmeans)
-
+#install.packages('circlize')
+library(circlize)
 
 d <- readRDS('./data/lernzmp_lakes_master.rds')
 d2 <- d$updated 
@@ -167,31 +168,102 @@ ggplot(sen, aes(x = season, stratum = trend_qual, alluvium = LID, fill = trend_q
   geom_flow() +
   geom_stratum(width = 0.6)  +
   scale_fill_manual(values= c('#568EA3', '#B3192B')) +
-  geom_text(
-    stat = "flow",
-    aes(
-      label = after_stat(ifelse(
-        flow == "to",
-        scales::percent(
-          ave(count, x, flow, group, FUN = sum) /
-            ave(count, x, flow, FUN = sum),
-          accuracy = 1
-        ),
-        NA
-      )),
-      hjust = after_stat(flow) == "to"
-    )
-  ) +
+  geom_text(stat = "flow",
+    aes(label = after_stat(ifelse(flow == "to",
+        scales::percent(ave(count, x, flow, group, FUN = sum) /ave(count, x, flow, FUN = sum),
+                        accuracy = 1),NA)),
+        hjust = after_stat(flow) == "to")) +
   theme_bw() +
   labs(fill = 'Trend direction',
        y = 'Number of lakes',
        x = 'Season') 
 
 
+ggplot(sen, aes(x = season, stratum = trend_qual, alluvium = LID, fill = trend_qual)) +
+  geom_flow(stat = 'alluvium', lode.guidance = 'forward') +
+  geom_stratum(width = 0.6)  +
+  scale_fill_manual(values= c('#568EA3', '#B3192B')) +
+  theme_bw() +
+  labs(fill = 'Trend direction',
+       y = 'Number of lakes',
+       x = 'Season') 
+
 ggplot(sen, aes(x = season, fill = trend_qual)) +
   geom_bar(position = 'dodge') +
   scale_fill_manual(values= c('#568EA3', '#B3192B')) 
 
+################################################################################
+## create circular plot
+sen <- sen %>% 
+  arrange(LID, season)
+
+season_order <- c("spring", "summer", "autumn", "winter")
+
+# Create sen_chord filtered and processed from sen
+sen_chord <- sen %>%
+  mutate(season = tolower(season)) %>%               # lowercase seasons
+  mutate(season = factor(season, levels = season_order)) %>%
+  filter(!is.na(season), trend_qual %in% c("warm", "cool")) %>%
+  group_by(LID) %>%
+  filter(n_distinct(season) == 4) %>%                # keep lakes with all four seasons
+  ungroup()
+
+# Pivot wider to get one row per lake, columns for each season's trend_qual
+sen_wide <- sen_chord %>%
+  select(LID, season, trend_qual) %>%
+  pivot_wider(names_from = season, values_from = trend_qual)
+
+# Define adjacent season pairs for transitions
+season_pairs <- list(
+  c("spring", "summer"),
+  c("summer", "autumn"),
+  c("autumn", "winter"),
+  c("winter", "spring")   # loop back
+)
+
+# Calculate flows between seasons
+all_flows <- lapply(season_pairs, function(pair) {
+  from_season <- pair[1]
+  to_season <- pair[2]
+  
+  sen_wide %>%
+    count(
+      from = paste(from_season, get(from_season), sep = "_"),
+      to   = paste(to_season, get(to_season), sep = "_")
+    ) %>%
+    filter(n > 0)
+}) %>%
+  bind_rows()
+
+# Create flow matrix for chordDiagram
+all_states <- unique(c(all_flows$from, all_flows$to))
+flow_matrix <- matrix(0, nrow = length(all_states), ncol = length(all_states),
+                      dimnames = list(all_states, all_states))
+for(i in seq_len(nrow(all_flows))) {
+  flow_matrix[all_flows$from[i], all_flows$to[i]] <- all_flows$n[i]
+}
+
+# Define colors
+season_colors <- c(spring = "#66C2A5", summer = "#FC8D62", autumn = "#8DA0CB", winter = "#E78AC3")
+trend_colors <- c(warm = "#B3192B", cool = "#568EA3")
+
+grid_colors <- sapply(all_states, function(state) {
+  parts <- strsplit(state, "_")[[1]]
+  trend <- parts[2]
+  trend_colors[trend]
+})
+
+# Plot chord diagram
+circos.clear()
+circos.par(gap.degree = 5)
+chordDiagram(
+  x = flow_matrix,
+  #transparency = 0.3,
+ # grid.col = season_colors,
+  #col = grid_colors,
+  annotationTrack = c("name", "grid")
+)
+title("Seasonal Trend_qual Flows Between Seasons")
 #################################################################################
 # calculate which lakes are consistently cooling, warming, or changing
 sen_summ <- sen %>% 
