@@ -5,6 +5,8 @@ library(lubridate)
 library(ggpubr)
 library(sf)
 library(aemetools)
+install.packages('ggExtra')
+library(ggExtra)
 
 # read LSWT output
 sen <- read.csv('./data/output/sen_slope_LSWT_annual_mean_30_districts_landsat7.csv') %>% 
@@ -158,9 +160,9 @@ wtemp <-  ggplot() +
   theme_bw() +
   geom_point(data = df_wtemp, aes(x = lon, y = lat, color = sen_slope), size = 2)  +
   scale_color_gradient2(
-    high = 'red',#brewer.pal(9, "RdBu")[2],   # Cold color
+    high = 'firebrick',#brewer.pal(9, "RdBu")[2],   # Cold color
     mid = "#D3D3D3",                    # Midpoint (neutral color)
-    low = 'blue', #brewer.pal(9, "RdBu")[8],  # Hot color
+    low = 'steelblue', #brewer.pal(9, "RdBu")[8],  # Hot color
     midpoint = 0                      # Set midpoint to 0 for diverging effect
   ) +  #scale_color_viridis_b() +
   theme_bw() +
@@ -169,12 +171,80 @@ wtemp <-  ggplot() +
   xlab('Longitude') +
   ylab('Latitude') +
   guides(size = 'none') +
-  theme(text = element_text(size = 14))
+  theme(text = element_text(size = 12),
+        legend.position = "left",
+        legend.direction = "vertical",
+        legend.box = "vertical") 
 wtemp
 
-ggsave('./figures/landsat_7/map_LSWT.png', wtemp,
+wtemp_hist <- ggMarginal(wtemp, 
+           type = "histogram", 
+           margins = "both", 
+           size = 4, 
+           fill = "gray", 
+           color = "black")
+wtemp_hist
+
+ggsave('./figures/landsat_7/map_LSWT.png', wtemp_hist,
        dpi = 300, units = 'mm', height = 400, width = 350, scale = 0.4)
 
+# try to discrete slope categories
+df_wtemp <- df_wtemp %>% 
+  mutate(slope_cat = case_when(
+    sen_slope <= -0.1 ~ "Strong Cooling",
+    sen_slope > -0.1 & sen_slope < -0.01 ~ "Mild Cooling",
+    sen_slope >= -0.01 & sen_slope <= 0.01 ~ "No Change",
+    sen_slope > 0.01 & sen_slope < 0.1 ~ "Mild Warming",
+    sen_slope >= 0.1 ~ "Strong Warming"
+  ))
+
+map_categ <-  ggplot() +
+  geom_sf(data = nz_shapefile, fill = NA, color = 'black') +
+  theme_bw() +
+  geom_point(data = df_wtemp, aes(x = lon, y = lat, color = slope_cat), size = 2)  +
+  theme_bw() +
+  labs(color = 'Rate of Change') +
+  scale_color_manual(
+    values = c(
+      "Strong Cooling" = "steelblue",
+      "Mild Cooling" = "lightblue",
+      "No Change" = '#D3D3D3',
+      "Mild Warming" = "salmon",
+      "Strong Warming" = "firebrick")) +
+  xlab('Longitude') +
+  ylab('Latitude') +
+  guides(size = 'none') +
+  theme(text = element_text(size = 12),
+        legend.text = element_text(size = 10),
+        legend.position = "left",
+        legend.direction = "vertical",
+        legend.box = "vertical") 
+map_categ
+
+map_cat_hist <- ggMarginal(map_categ, 
+           type = "histogram", 
+           margins = "both", 
+           groupFill = TRUE,
+           size = 4, 
+           fill = "gray", 
+           color = "black")
+map_cat_hist
+ggsave('./figures/landsat_7/map__categories_LSWT.png', map_cat_hist,
+       dpi = 300, units = 'mm', height = 400, width = 350, scale = 0.4)
+
+a <- ggplot(df_wtemp, aes(x = sen_slope)) +
+  geom_density(size = 2, fill = 'black', alpha = 0.7) +
+  theme_bw() +
+  geom_vline(xintercept = 0) +
+  xlab('Rate of change in LSWT (°C/year)') +
+  ylab('Density') +
+  theme(text = element_text(size = 16))
+        
+
+ggsave('./figures/landsat_7/density_all_lakes.png', a,
+       dpi = 300, units = 'mm', height = 400, width = 300, scale = 0.4)
+
+##############################################################################
 
 maps <- ggarrange(rain, atemp, wind, wtemp, labels = 'auto')
 maps
