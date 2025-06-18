@@ -1,16 +1,16 @@
-"region","mean_sen","sd","n_lakes"
-"Northland",0.24,0.24,33
-"Auckland",0.29,0.19,25
-"Waikato",0.16,0.27,60
-"Bay of Plenty",0.22,0.2,37
-"Gisborne",0.48,0.28,17
-"Hawke's Bay",0.36,0.21,16
-"Manawatu-Whanganui",0.2,0.23,56
-"Taranaki",0.36,0.16,5
-"Wellington",0.22,0.21,20
-"Nelson",0.22,0.32,28
-"Marlborough",0.19,0.33,7
-"West Coast",0.16,0.32,76
-"Canterbury",-0.05,0.33,80
-"Otago",0,0.32,43
-"Southland",-0.08,0.28,133
+region,mean_sen,median_sen,sd,n_lakes
+Northland,-0.01,-0.02,0.06,10
+Auckland,0.05,0.03,0.06,7
+Waikato,0.02,0.02,0.06,20
+Bay of Plenty,0.09,0.07,0.07,16
+Gisborne,-0.03,-0.03,0.06,7
+Hawke's Bay,0,0,0.02,9
+Manawatu-Whanganui,0.01,0.01,0.07,13
+Taranaki,-0.07,-0.07,NA,1
+Wellington,0.04,0.05,0.05,10
+Nelson,0.04,0.02,0.06,13
+Marlborough,-0.01,0,0.02,4
+West Coast,0,0,0.06,36
+Canterbury,-0.01,0,0.06,45
+Otago,-0.01,0,0.06,28
+Southland,0.03,0.02,0.07,91
