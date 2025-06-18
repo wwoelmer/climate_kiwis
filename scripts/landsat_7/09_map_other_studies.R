@@ -216,8 +216,13 @@ spatial <- summaries %>%
   theme(axis.text.x = element_text(angle = 60, hjust = 1)) +
   xlab('Study spatial extent')
 
+max(gps$n_lakes)
 median(gps$n_lakes)
 median(gps$n_years)
+min(gps$n_years)
+max(gps$n_years)
+
+
 histos <- ggarrange(lakes, years, method, nrow = 1)
 ggarrange(mapc, histos, nrow = 2)
 
@@ -260,3 +265,10 @@ gps %>%
   ylab('Trend in LSWT (°C/year)') +
   labs(color = 'Number of lakes')
 
+# number of studies that have more than one entry
+table(gps$citation_short)
+gps %>% 
+  ungroup() %>% 
+  count(citation_short) %>% 
+  filter(n >1) %>% 
+  summarise(n_repeated = n())
