@@ -11,6 +11,7 @@ library(lmerTest)  # for p-values
 library(emmeans)
 #install.packages('circlize')
 library(circlize)
+library(ggpmisc)
 
 d <- readRDS('./data/lernzmp_lakes_master.rds')
 d2 <- d$updated 
@@ -48,12 +49,13 @@ data <- data %>%
          season = ifelse(month(Date) %in% c(6, 7, 8), 'winter', season),
          season = ifelse(month(Date) %in% c(9, 10, 11), 'spring', season))
 
-# set season as ordered factor
-data$season <- factor(data$season, levels = c('spring', 'summer',
-                                                      'autumn', 'winter'))
+# then make a season that is 'all'
+data_long <- data %>% 
+  mutate(season = as.character(season)) %>%
+  bind_rows(mutate(., season = "annual"))
 
 # take annual mean by season
-data_sub <- data %>% 
+data_sub <- data_long %>% 
   mutate(year = year(Date)) %>% 
   group_by(year, LID, season) %>% 
   summarise(mean_temp = mean(interp, na.rm = TRUE))
@@ -72,22 +74,20 @@ sen <- data_sub %>%
             sen_signif = sens.slope(mean_temp)$p.value)
 sen
 
+sen$season <- factor(sen$season, levels = c('annual', 'winter',
+                                            'autumn', 'summer',
+                                            'spring'))
 
-ggplot(sen, aes(x = sen_slope, y = season)) +
-  geom_density_ridges() +
-  xlab('Rate of change') +
-  geom_vline(xintercept = 0) +
-  theme_bw()
+# write as csv all trends across seasons and annual
+write.csv(sen, './data/output/LSWT_trends_by_season_annual.csv', row.names = FALSE)
 
-length(unique(sen$LID))
-
-lswt_season <- ggplot(sen, aes(y = season, x = sen_slope, fill = season)) +
-  geom_boxplot() +
+lswt_season <- ggplot(sen, aes(y = fct_rev(season), x = sen_slope, fill = season)) +
+  geom_boxplot(alpha = 0.9) +
   geom_jitter(alpha = 0.1) +
   theme_bw() +
-  scale_fill_manual(values = c("#A8D08D", "#EE6C4D","#FFB84D", "#96C0B7")) +
+  scale_fill_manual(values = c("#454545", "#96C0B7", "#FFB84D", "#EE6C4D", "#A8D08D")) +
   geom_vline(xintercept = 0, size = 1) +
-  #stat_compare_means(method = 'anova') +
+#  stat_compare_means(method = 'anova') +
 #  stat_compare_means(comparisons = list(c("spring", "summer"), c("spring", "autumn"), c("spring", "winter"), 
 #                                        c("summer", "autumn"), c("summer", "winter"), c("autumn", "winter")), 
 #                     method = "t.test") +
@@ -109,22 +109,6 @@ anova(model)
 # test pairwise differences across seasons
 emmeans(model, pairwise ~ season)
 
-
-
-ggplot(sen, aes(y = season, x = sen_slope, fill = season)) +
-  geom_density_ridges() +
-  geom_jitter(alpha = 0.1) +
-  theme_bw() +
-  scale_fill_manual(values = c("#A8D08D", "#EE6C4D","#FFB84D", "#96C0B7")) +
-  geom_vline(xintercept = 0, size = 1) +
-  #stat_compare_means(method = 'anova') +
-  #  stat_compare_means(comparisons = list(c("spring", "summer"), c("spring", "autumn"), c("spring", "winter"), 
-  #                                        c("summer", "autumn"), c("summer", "winter"), c("autumn", "winter")), 
-  #                     method = "t.test") +
-  ylab('Rate of change in LSWT (°C/decade)') +
-  xlab('Season') +
-  theme(legend.position = 'none')
-
 summ <- sen %>% 
   group_by(season) %>% 
   summarise(mean_temp_change = round(mean(sen_slope), 3),
@@ -132,10 +116,10 @@ summ <- sen %>%
             sd_temp_change = sd(sen_slope),
             range = max(sen_slope) - min(sen_slope))
 summ
-write.csv(summ, './data/output/LSWT_trends_by_season.csv', row.names = FALSE)
+write.csv(summ, './data/output/LSWT_trend_summaries_by_season.csv', row.names = FALSE)
 ##################################################################################
 ##################################################################################
-## plot map by season
+## plot map by season, bring back xy coords
 d <- readRDS('./data/lernzmp_lakes_master.rds')
 geo <- d$updated %>% 
   select(id_final, area, easting_NZTM, northing_NZTM, max_depth, mean_depth, GeomorphicType) %>% 
@@ -162,9 +146,9 @@ ggplot(sen_geo, aes(x = easting_NZTM, y = northing_NZTM, color = sen_slope)) +
 library(ggalluvial)
 # break up LSWT trends into cooling or warming
 sen <- sen %>% 
-  mutate(trend_qual = ifelse(sen_slope > 0, 'warm', 'cool'))
+  mutate(season_trend_qual = ifelse(sen_slope > 0, 'warm', 'cool'))
 
-ggplot(sen, aes(x = season, stratum = trend_qual, alluvium = LID, fill = trend_qual, label = trend_qual)) +
+ggplot(sen, aes(x = season, stratum = season_trend_qual, alluvium = LID, fill = season_trend_qual, label = season_trend_qual)) +
   geom_flow() +
   geom_stratum(width = 0.6)  +
   scale_fill_manual(values= c('#568EA3', '#B3192B')) +
@@ -179,7 +163,7 @@ ggplot(sen, aes(x = season, stratum = trend_qual, alluvium = LID, fill = trend_q
        x = 'Season') 
 
 
-ggplot(sen, aes(x = season, stratum = trend_qual, alluvium = LID, fill = trend_qual)) +
+ggplot(sen, aes(x = season, stratum = season_trend_qual, alluvium = LID, fill = season_trend_qual)) +
   geom_flow(stat = 'alluvium', lode.guidance = 'forward') +
   geom_stratum(width = 0.6)  +
   scale_fill_manual(values= c('#568EA3', '#B3192B')) +
@@ -188,88 +172,20 @@ ggplot(sen, aes(x = season, stratum = trend_qual, alluvium = LID, fill = trend_q
        y = 'Number of lakes',
        x = 'Season') 
 
-ggplot(sen, aes(x = season, fill = trend_qual)) +
+ggplot(sen, aes(x = season, fill = season_trend_qual)) +
   geom_bar(position = 'dodge') +
-  scale_fill_manual(values= c('#568EA3', '#B3192B')) 
+  scale_fill_manual(values= c('#568EA3', '#B3192B')) +
+  theme_bw() +
+  ylab('Number of lakes') +
+  xlab("") +
+  labs(fill = 'Trend')
 
 ################################################################################
-## create circular plot
-sen <- sen %>% 
-  arrange(LID, season)
-
-season_order <- c("spring", "summer", "autumn", "winter")
-
-# Create sen_chord filtered and processed from sen
-sen_chord <- sen %>%
-  mutate(season = tolower(season)) %>%               # lowercase seasons
-  mutate(season = factor(season, levels = season_order)) %>%
-  filter(!is.na(season), trend_qual %in% c("warm", "cool")) %>%
-  group_by(LID) %>%
-  filter(n_distinct(season) == 4) %>%                # keep lakes with all four seasons
-  ungroup()
-
-# Pivot wider to get one row per lake, columns for each season's trend_qual
-sen_wide <- sen_chord %>%
-  select(LID, season, trend_qual) %>%
-  pivot_wider(names_from = season, values_from = trend_qual)
-
-# Define adjacent season pairs for transitions
-season_pairs <- list(
-  c("spring", "summer"),
-  c("summer", "autumn"),
-  c("autumn", "winter"),
-  c("winter", "spring")   # loop back
-)
-
-# Calculate flows between seasons
-all_flows <- lapply(season_pairs, function(pair) {
-  from_season <- pair[1]
-  to_season <- pair[2]
-  
-  sen_wide %>%
-    count(
-      from = paste(from_season, get(from_season), sep = "_"),
-      to   = paste(to_season, get(to_season), sep = "_")
-    ) %>%
-    filter(n > 0)
-}) %>%
-  bind_rows()
-
-# Create flow matrix for chordDiagram
-all_states <- unique(c(all_flows$from, all_flows$to))
-flow_matrix <- matrix(0, nrow = length(all_states), ncol = length(all_states),
-                      dimnames = list(all_states, all_states))
-for(i in seq_len(nrow(all_flows))) {
-  flow_matrix[all_flows$from[i], all_flows$to[i]] <- all_flows$n[i]
-}
-
-# Define colors
-season_colors <- c(spring = "#66C2A5", summer = "#FC8D62", autumn = "#8DA0CB", winter = "#E78AC3")
-trend_colors <- c(warm = "#B3192B", cool = "#568EA3")
-
-grid_colors <- sapply(all_states, function(state) {
-  parts <- strsplit(state, "_")[[1]]
-  trend <- parts[2]
-  trend_colors[trend]
-})
-
-# Plot chord diagram
-circos.clear()
-circos.par(gap.degree = 5)
-chordDiagram(
-  x = flow_matrix,
-  #transparency = 0.3,
- # grid.col = season_colors,
-  #col = grid_colors,
-  annotationTrack = c("name", "grid")
-)
-title("Seasonal Trend_qual Flows Between Seasons")
-#################################################################################
 # calculate which lakes are consistently cooling, warming, or changing
 sen_summ <- sen %>% 
   group_by(LID) %>% 
-  summarise(n_cool = sum(trend_qual=='cool'),
-            n_warm = sum(trend_qual=='warm'),
+  summarise(n_cool = sum(season_trend_qual=='cool'),
+            n_warm = sum(season_trend_qual=='warm'),
             cv = sd(sen_slope)/abs(mean(sen_slope))) %>% 
   mutate(lake_group = case_when(n_cool > 0 & n_warm > 0 ~ 'variable',
                                 n_cool > 0 ~ 'always cooling',
@@ -292,12 +208,67 @@ ann <- ann %>%
 # combine seasonal and annual trends
 season_ann <- left_join(sen, ann)
 
-ggplot(season_ann, aes(x = sen_slope, y = annual_trend, color = season)) +
+# remove the season = annual
+season_ann <- season_ann %>% 
+  filter(season!='annual')
+
+a <- ggplot(season_ann, aes(x = sen_slope, y = annual_trend, color = fct_rev(season))) +
   geom_point() +
   geom_smooth(method = 'lm') +
   facet_wrap(~season) +
   theme_bw() +
-  geom_abline(slope = 1, intercept = 0)
+  stat_poly_eq(
+    aes(label = ..rr.label.. ),
+    formula = y ~ x,
+    parse = TRUE,
+    color = 'black',
+    label.x.npc = "left",  # position inside plot area
+    label.y.npc = 0.95) +
+  scale_color_manual(values = c("#A8D08D", "#EE6C4D","#FFB84D", "#96C0B7")) +
+  geom_abline(slope = 1, intercept = 0) +
+  geom_hline(yintercept = 0) +
+  geom_vline(xintercept = 0) +
+  labs(color = 'Season') +
+  ylab('Annual trend (°C/year)') +
+  xlab('Seasonal trend (°C/year)')
+a
+
+# make qualitative column for annual trend
+season_ann <- season_ann %>% 
+  mutate(annual_trend_qual = ifelse(annual_trend > 0, 'warm', 'cool')) %>% 
+  mutate(compare = case_when(
+    season_trend_qual == "warm" & annual_trend_qual == "warm" ~ "both warm",
+    season_trend_qual == "cool" & annual_trend_qual == "cool" ~ "both cool",
+    season_trend_qual == "warm" & annual_trend_qual == "cool" ~ "warm season, cool year",
+    season_trend_qual == "cool" & annual_trend_qual == "warm" ~ "cool season, warm year",
+    TRUE ~ NA_character_  # catches any missing or unmatched cases
+  ))
+
+compare_summary <- season_ann %>% 
+  filter(!is.na(compare)) %>% 
+  group_by(season, compare) %>%
+  summarise(count = n(), .groups = "drop") %>%
+  group_by(season) %>%
+  mutate(percent = 100 * count / sum(count)) %>%
+  ungroup()
+
+compare_summary$compare <- factor(compare_summary$compare, levels = c('cool season, warm year',
+                                                                      'both warm', 
+                                                                      'both cool',
+                                                                      'warm season, cool year'))
+
+b <- ggplot(compare_summary, aes(x = compare, y = percent, fill = season)) +
+  geom_col(position = 'dodge') +
+  facet_wrap(~compare, scales = 'free') +
+  scale_fill_manual(values = c("#A8D08D", "#EE6C4D","#FFB84D", "#96C0B7")) +
+  theme_bw() +
+  ylim(0, 50) +
+  theme(axis.ticks.x = element_blank(),
+        axis.text.x = element_blank()) +
+  xlab('Season')
+  
+ggarrange(a, b, common.legend = TRUE)
+
 
 # read in FENZ drivers and keann# read in FENZ drivers and keep the relevant ones
 fenz <- read.csv('./data/drivers/FENZ_Lake_Update_2024_25.09.2024.csv')
@@ -337,8 +308,8 @@ df <- df %>%
 
 write.csv(df, './data/output/LSWT_annual_seasonal_trends_predictors.csv', row.names = FALSE)
 df %>% 
-  filter(cv < 2500) %>% 
-ggplot(aes(y = cv, x = lake_group, color = lake_group)) +
+  filter(cv_trend < 2500) %>% 
+ggplot(aes(y = cv_trend, x = lake_group, color = lake_group)) +
   geom_point() +
   geom_hline(yintercept = 0) +
   theme_bw()
@@ -359,8 +330,8 @@ ggplot(df, aes(y = MaxDepth, x = lake_group, color = lake_group)) +
   theme_bw()
 
 df %>% 
-  filter(cv < 2500) %>% 
-ggplot(aes(y = MaxDepth, x = cv, color = lake_group)) +
+  filter(cv_trend < 2500) %>% 
+ggplot(aes(y = MaxDepth, x = cv_trend, color = lake_group)) +
   geom_point() +
   geom_hline(yintercept = 0) +
   theme_bw()
