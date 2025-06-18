@@ -51,22 +51,38 @@ sen$city <- factor(sen$city, levels = c('Kerikeri', 'Whangarei',
                                         'Invercargill', 'Milford Sound'))
 
 
-a <- ggplot(sen, aes(x = sen_slope)) +
-  geom_density(size = 2) +
-  xlab('Rate of change in LSWT (°C/year)') +
-  ylab('Density') +
-  geom_vline(xintercept = 0) +
-  theme_bw() +
-  theme(text = element_text(size = 12))
+# create extra rows for 'all lakes'
+sen_all <- sen %>% 
+  mutate(region = as.character(region)) %>%
+  bind_rows(mutate(., region = "All lakes"))
+
+# arrange factor for sen_all
+sen_all$region <- factor(sen_all$region, levels = c('All lakes', 'Northland',
+                                            'Auckland', 'Waikato',
+                                            'Bay of Plenty',
+                                            'Gisborne', "Hawke's Bay", 
+                                            'Manawatu-Whanganui', 'Taranaki', 
+                                            'Wellington',
+                                            'Nelson', "Marlborough",
+                                            'West Coast','Canterbury', 
+                                            'Otago',
+                                            'Southland'))
 
 # set up color palette
-n_colors <- length(levels(sen$region))
+n_colors <- length(levels(sen_all$region)) - 1
 colors <- colorRampPalette(brewer.pal(11, "Spectral"))(n_colors)
+colors <- c('black', colors)
 
-sen <- sen %>% 
+sen_all <- sen_all %>% 
   arrange(region, city) 
 
-b <- sen %>% 
+# name region with the number of lakes
+sen_all <- sen_all %>% 
+  group_by(region) %>% 
+  mutate(n_lakes = n()) %>% 
+  mutate(region_label = paste0(region, " (n = ", n_lakes, ")"))
+
+lswt_rate <- sen_all %>% 
   filter(n > 3) %>% 
   ggplot(aes(x = sen_slope, y = fct_rev(region), fill = region)) +
   geom_density_ridges(scale = 2) +
@@ -81,14 +97,11 @@ b <- sen %>%
   theme_bw() +
   theme(text = element_text(size = 12),
         legend.position = 'none')
-b
-
-lswt_rate <- ggarrange(a, b, widths = c(1, 2),
-                       labels = 'auto')
 lswt_rate
 
+
 ggsave('./figures/landsat_7/rate_of_change_LWST.png', lswt_rate, 
-       dpi = 300, units = 'mm', height = 400, width = 800, scale = 0.3)
+       dpi = 300, units = 'mm', height = 400, width = 400, scale = 0.3)
 
 mean_island <- sen %>% 
   group_by(island) %>% 
