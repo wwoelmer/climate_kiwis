@@ -74,6 +74,8 @@ sen <- data_sub %>%
             sen_signif = sens.slope(mean_temp)$p.value)
 sen
 
+length(unique(sen$LID))
+
 sen$season <- factor(sen$season, levels = c('annual', 'winter',
                                             'autumn', 'summer',
                                             'spring'))
