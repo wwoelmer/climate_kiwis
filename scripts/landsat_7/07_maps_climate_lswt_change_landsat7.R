@@ -188,7 +188,7 @@ wtemp_hist
 ggsave('./figures/landsat_7/map_LSWT.png', wtemp_hist,
        dpi = 300, units = 'mm', height = 400, width = 350, scale = 0.4)
 
-# try to discrete slope categories
+# discrete slope categories
 df_wtemp <- df_wtemp %>% 
   mutate(slope_cat = case_when(
     sen_slope <= -0.1 ~ "Strong Cooling",
@@ -197,6 +197,12 @@ df_wtemp <- df_wtemp %>%
     sen_slope > 0.01 & sen_slope < 0.1 ~ "Mild Warming",
     sen_slope >= 0.1 ~ "Strong Warming"
   ))
+
+df_wtemp$slope_cat <- factor(df_wtemp$slope_cat, levels = c('Strong Warming',
+                                                            'Mild Warming',
+                                                            'No Change',
+                                                            'Mild Cooling',
+                                                            'Strong Cooling'))
 
 map_categ <-  ggplot() +
   geom_sf(data = nz_shapefile, fill = NA, color = 'black') +
@@ -229,7 +235,7 @@ map_cat_hist <- ggMarginal(map_categ,
            fill = "gray", 
            color = "black")
 map_cat_hist
-ggsave('./figures/landsat_7/map__categories_LSWT.png', map_cat_hist,
+ggsave('./figures/landsat_7/map_categories_LSWT.png', map_cat_hist,
        dpi = 300, units = 'mm', height = 400, width = 350, scale = 0.4)
 
 a <- ggplot(df_wtemp, aes(x = sen_slope)) +
@@ -240,7 +246,7 @@ a <- ggplot(df_wtemp, aes(x = sen_slope)) +
   ylab('Density') +
   theme(text = element_text(size = 16))
         
-
+a
 ggsave('./figures/landsat_7/density_all_lakes.png', a,
        dpi = 300, units = 'mm', height = 400, width = 300, scale = 0.4)
 
