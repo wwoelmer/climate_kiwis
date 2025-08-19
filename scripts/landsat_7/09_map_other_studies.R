@@ -61,74 +61,6 @@ sub <- gps %>%
 # get world shapefile
 world <- ne_countries(scale = "medium", returnclass = "sf")
 
-col_pal <- viridis(13, option = "D")
-
-mapa <- ggplot() +
-  geom_sf(data = world, fill = 'gray', color = 'gray') +
-  theme_bw() +
-  geom_jitter(data = sub, shape = 21, stroke = 0.5, color = 'black',
-             aes(x = long, y = lat, fill = spatial_extent, size = rate_C_year))  +
-  #scale_fill_manual(values = col_pal) +
-  labs(fill = 'Spatial extent',
-       size = 'Rate') +
-  xlab('') +
-  ylab('') +
-  theme(text = element_text(size = 12)) +
-  ggtitle(paste0('n = ', length(unique(sub$citation)), ' studies with annual trends'))
-
-mapb <- ggplot() +
-  geom_sf(data = world, fill = 'gray', color = 'gray') +
-  theme_bw() +
-  geom_jitter(data = sub, shape = 21, stroke = 0.5, color = 'black',
-              aes(x = long, y = lat, size = spatial_extent, fill = rate_C_year))  +
-  scale_fill_gradient2(
-    low = "steelblue",       # for cooling
-    mid = "#D3D3D3",      # neutral
-    high = "firebrick",       # for warming
-    midpoint = 0) +
-  labs(size = 'Spatial extent',
-       fill = 'Rate') +
-  xlab('') +
-  ylab('') +
-  theme(text = element_text(size = 12)) +
-  ggtitle(paste0('n = ', length(unique(sub$citation)), ' studies with annual trends'))
-
-ggplot() +
-  geom_sf(data = world, fill = 'gray', color = 'gray') +
-  theme_bw() +
-  geom_jitter(data = sub, stroke = 0.5, color = 'black',
-              aes(x = long, y = lat, shape = spatial_extent, fill = rate_C_year))  +
-  scale_shape_manual(values = c(16, 15, 17)) +
-  scale_fill_gradient2(
-    low = "steelblue",       # for cooling
-    mid = "#D3D3D3",      # neutral
-    high = "firebrick",       # for warming
-    midpoint = 0) +
-  labs(shape = 'Spatial extent',
-       fill = 'Rate') +
-  xlab('') +
-  ylab('') +
-  theme(text = element_text(size = 12)) +
-  ggtitle(paste0('n = ', length(unique(sub$citation)), ' studies with annual trends'))
-
-
-## summer only
-ggplot() +
-  geom_sf(data = world, fill = 'gray', color = 'gray') +
-  theme_bw() +
-  geom_jitter(data = gps[gps$annual_seasonal_data=='summer',], size = 3, shape = 21, stroke = 0.5, color = 'black',
-             aes(x = long, y = lat, fill = rate_C_year))  +
-  scale_fill_gradient2(
-    low = "steelblue",       # for cooling
-    mid = "#D3D3D3",      # neutral
-    high = "firebrick",       # for warming
-    midpoint = 0) +
-  labs(fill = 'Rate') +
-  xlab('') +
-  ylab('') +
-  theme(text = element_text(size = 14)) +
-  ggtitle('Summer rates of change')
-
 gps <- gps %>% 
   mutate(size_cat = case_when(spatial_extent == "point" ~ 'point',
                               spatial_extent == "region" ~ 'regional or global',
@@ -137,57 +69,6 @@ gps <- gps %>%
                                spatial_extent == "region" ~ 'regional or global',
                                spatial_extent == "global" ~ 'regional or global'))
 
-ggplot() +
-  geom_sf(data = world, fill = 'gray', color = 'gray') +
-  theme_bw() +
-  geom_point(data = gps,  stroke = 1.2,
-             aes(x = long, y = lat, shape = size_cat, alpha = alpha_cat,
-                 color = temporal_aggregation, size = rate_C_year))  +
-  #scale_fill_manual(values = col_pal) +
-  labs(fill = 'Temporal aggregation',
-       size = 'Rate') +
-  scale_alpha_manual(values = c(1, 0.5)) +
-  xlab('') +
-  ylab('') +
-  theme(text = element_text(size = 14))+
-  ggtitle(paste0('n = ', length(unique(gps$citation)), ' studies'))
-
-
-ggplot() +
-  geom_sf(data = world, fill = 'gray', color = 'gray') +
-  theme_bw() +
-  geom_point(data = gps,  stroke = 1.2,
-             aes(x = long, y = lat, shape = spatial_extent,
-                 color = temporal_aggregation, size = rate_C_year))  +
-  #scale_fill_manual(values = col_pal) +
-  labs(fill = 'Temporal aggregation',
-       size = 'Rate') +
-  xlab('') +
-  ylab('') +
-  theme(text = element_text(size = 14))+
-  ggtitle(paste0('n = ', length(unique(gps$citation)), ' studies'))
-
-mapc <- ggplot() +
-  geom_sf(data = world, fill = 'gray', color = 'gray') +
-  theme_bw() +
-  geom_jitter(data = gps, shape = 21, stroke = 1.2, color = 'black',
-             aes(x = long, y = lat, fill = rate_C_year, size = spatial_extent))  +
-  scale_fill_gradient2(
-    low = "steelblue",       # for cooling
-    mid = "#D3D3D3",      # neutral
-    high = "firebrick",       # for warming
-    midpoint = 0) +
-  labs(fill = 'Rate (°C/year)',
-       size = 'Saptial Extent') +
-  guides(
-    fill = guide_colorbar(direction = "vertical"),
-    size = guide_legend(direction = "vertical")
-  ) +
-  theme(
-    legend.position = "right",       # Keep legends on the right
-    legend.box = "horizontal"        # Arrange separate legends side by side
-  ) 
-mapc
 
 gps_notglobal <- gps %>% 
   filter(spatial_extent!='global')
@@ -200,92 +81,52 @@ p_notglobal <- ggplot() +
   geom_sf(data = world, fill = 'gray', color = 'gray') +
   theme_bw() +
   geom_jitter(data = gps_notglobal, shape = 21, color = 'black',
-              aes(x = long, y = lat, fill = rate_C_year, size = n_lakes))  +
-  scale_fill_gradient2(
-    low = "steelblue",       # for cooling
-    mid = "#D3D3D3",      # neutral
-    high = "firebrick",       # for warming
-    midpoint = 0) +
+              aes(x = long, y = lat,
+                  fill = method_LSWT_standard, size = n_lakes))  +
+  scale_fill_manual(values = c(
+    "#E69F00",  # orange
+    "#009E73",  # bluish green
+    "#0072B2",  # blue
+    "#D55E00",  # reddish orange
+    "#CC79A7"   # reddish purple (instead of light blue)
+  )) +
   scale_size_continuous(
     breaks = c(10, 100, 500, 1000),
     range  = c(1, 10)) + # optional: controls min/max point size in the plot
   labs(fill = 'Rate (°C/year)',
        size = 'Number of lakes') +
-  guides(fill = guide_colorbar(direction = "vertical"),
-         size = guide_legend(direction = "vertical")) +
-  theme(legend.position = "right",       # Keep legends on the right
+ # guides(fill = guide_colorbar(direction = "vertical"),
+#         size = guide_legend(direction = "vertical")) +
+  theme(legend.position = "left",       # Keep legends on the right
         legend.box = "horizontal",
         legend.box.just = 'center')        # Arrange separate legends side by side
 p_notglobal  
 
 p_notglobal <- p_notglobal + 
   geom_point(data = global[global$n_lakes < 2000,], 
+             shape = 21, color = 'black', alpha = 0.4,
              aes(x = dummy_long, y = dummy_lat,
-             color = rate_C_year, size = n_lakes, alpha = 0.3)) +
-  guides(alpha = 'none',
-         color = 'none') +
-  scale_color_gradient2(
-    low = "steelblue",       # for cooling
-    mid = "#D3D3D3",      # neutral
-    high = "firebrick",       # for warming
-    midpoint = 0) 
-p_notglobal  
+             fill = method_LSWT_standard, size = n_lakes)) +
+  guides(alpha = 'none') +
+  scale_fill_manual(values = c(
+    "#E69F00",  # orange
+    "#009E73",  # bluish green
+    "#0072B2",  # blue
+    "#B22222",  # weird but have to make this one a different hue so the alpha matches the color scale on fig above
+    "#CC79A7"   # reddish purple (instead of light blue)
+  ))
+p_notglobal
+ggplotly(p_notglobal)
 
-p_global <- ggplot() +
-  geom_point(data = global[global$n_lakes < 2000,], 
-             aes(x = dummy_long, y = dummy_lat,
-                 fill = rate_C_year, size = n_lakes)) +
-  scale_fill_gradient2(
-    low = "steelblue",       # for cooling
-    mid = "#D3D3D3",      # neutral
-    high = "firebrick",       # for warming
-    midpoint = 0) +
-  theme_bw() +
-  ylab( 'Rate (°C/year)') +
-  xlab('Study citation') +
-  ggtitle('Global studies') +
-#  guides(size = 'none') +
-  theme(legend.position = "right",       # Keep legends on the right
-        legend.box = "horizontal",
-        axis.text.x = element_text(angle = 45, hjust = 1),
-        text = element_text(size = 12))        
-p_global
-
-library(ggbreak)
-p_global <- ggplot() +
-  geom_point(data = global, shape = 21, color = 'black',
-             aes(x = citation_short, y = n_lakes, 
-                 fill = rate_C_year, size = 1))  +
-  scale_y_break(c(1500, 92000),
-                scales = c(1, 7)) + # break between 1260 and 90000
-  scale_fill_gradient2(
-    low = "steelblue",       # for cooling
-    mid = "#D3D3D3",      # neutral
-    high = "firebrick",       # for warming
-    midpoint = 0) +
-  theme_bw() +
-  coord_cartesian(clip = "off", ylim = c(min(global$n_lakes) * 0.95, max(global$n_lakes) * 1.05)) +
-  ylab( 'Number of lakes') +
-  xlab('') +
-  ggtitle('Global studies') +
-  guides(size = 'none',
-         fill = 'none') +
-  labs(fill = 'Rate (°C/year)') +
-  theme(legend.position = "right",       # Keep legends on the right
-        legend.box = "horizontal",
-        #axis.text.x = element_text(angle = 45, hjust = 1),
-        text = element_text(size = 12),
-        plot.margin = unit(c(2, 1, 2, 1), "cm"),
-        axis.text.x = element_blank()) 
-
-p_global
-ggsave('./figures/landsat_7/global_studies_rates.png', p_global, 
-        dpi = 300, units = 'mm', height = 200, width = 250, scale = 0.5,
-       bg = 'transparent', type = 'cairo')
-
-summaries <- gps %>% 
-  distinct(citation, .keep_all = TRUE)
-summaries
+map_bars <- ggMarginal(p_notglobal, 
+                       type = "histogram", 
+                       margins = "both", 
+                       size = 8, 
+                       fill = "gray", 
+                       color = "black") 
+map_bars
+ggsave('./figures/landsat_7/map_with_side_bars.png', map_bars, 
+       dpi = 300, units = 'mm', height = 400, width = 650, scale = 0.3)
 
 lakes <- summaries %>% 
   filter(n_lakes < 25000) %>% 
@@ -296,11 +137,11 @@ lakes <- summaries %>%
     "#009E73", # bluish green
     "#0072B2",  # blue
     "#D55E00", # reddish orange
-    "#56B4E9" # sky blue
+    "#CC79A7" # sky blue
   )) +
   theme_bw() +
   xlab('Study size (n lakes)') +
-  ylab('Frequency')+
+  ylab('# of studies')+
   labs(fill = 'Method of measurement')
 lakes
 
@@ -312,11 +153,11 @@ years <- summaries %>%
     "#009E73", # bluish green
     "#0072B2",  # blue
     "#D55E00", # reddish orange
-    "#56B4E9" # sky blue
+    "#CC79A7" # sky blue
   )) +
   theme_bw() +
   xlab('Study duration (n years)') +
-  ylab('Frequency')+
+  ylab('# of studies')+
   labs(fill = 'Method of measurement')
 years
 
@@ -329,13 +170,13 @@ method <- summaries %>%
     "#009E73", # bluish green
     "#0072B2",  # blue
     "#D55E00", # reddish orange
-    "#56B4E9" # sky blue
+    "#CC79A7" # sky blue
   )) +
   theme(legend.position = 'top',
         legend.key.size = unit(0.2, "cm")) +
   labs(fill = 'Spatial Extent') +
   xlab('Study method (type)')+
-  ylab('Frequency') 
+  ylab('# of studies') 
 method
 
 spatial <- summaries %>% 
@@ -346,11 +187,11 @@ spatial <- summaries %>%
     "#009E73", # bluish green
     "#0072B2",  # blue
     "#D55E00", # reddish orange
-    "#56B4E9" # sky blue
+    "#CC79A7" # sky blue
   )) +
   theme_bw() +
   xlab('Study spatial extent') +
-  ylab('Frequency') +
+  ylab('# of studies') +
   labs(fill = 'Method of measurement')
 spatial
 
