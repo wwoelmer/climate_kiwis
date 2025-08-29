@@ -133,6 +133,9 @@ wtemp <-  ggplot() +
         legend.box = "vertical") 
 wtemp
 
+library(plotly)
+ggplotly(wtemp)
+
 wtemp_hist <- ggMarginal(wtemp, 
            type = "histogram", 
            margins = "both", 
