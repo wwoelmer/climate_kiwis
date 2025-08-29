@@ -52,8 +52,10 @@ max(gps$rate_C_year)
 
 ## night time estimates
 night <- gps %>% 
-  filter(str_detect(annual_seasonal_data, "night")) %>% 
-  distinct(citation)
+  separate(temporal_aggregation, into = c("temporal_aggregation", "day_night"), 
+           sep = " \\(|\\)", extra = "drop", fill = "right") %>% 
+  filter(day_night=='night')
+
 nrow(night)
 
 
@@ -68,18 +70,30 @@ sub <- gps %>%
 ## below is for formatting all studies cites, still a working example, not real data
 library(stringi)
 
-lit <- read.csv('./lit_review_example.csv')
+lit <- read.csv('./data/all_literature_organized.csv')
+
 lit <- lit %>% 
   mutate(
     authors = str_extract(citation, "^(.*?)\\(\\d{4}\\)") %>% 
       str_remove("\\(\\d{4}\\)") %>% str_trim(),
     year    = str_extract(citation, "\\(\\d{4}\\)") %>% str_remove_all("[()]"),
-    title   = str_match(citation, "\\(\\d{4}\\)\\.\\s*(.*?)\\.\\s*[^.]+,")[,2] %>% str_trim(),
+    title   = str_match(citation, "\\(\\d{4}\\)\\.\\s*(.*?)(?:\\.|$)")[,2] %>% str_trim(),
     journal = str_match(citation, "\\.\\s*([^.,]+),\\s*\\d")[,2] %>% str_trim()
   )
 
+table(lit$search_engine)
+
+
 dups <- lit %>% 
-  distinct(title, year, .keep_all = TRUE)
+  group_by(title) %>% 
+  filter(n() > 1)
+
+length(unique(dups$title))
+
+
+
+no_dups <- lit %>% 
+  distinct(title, .keep_all = TRUE)
 
 screened <- read.csv('./data/LSWT_rates_of_change_literature.csv')
 screened <- screened %>% 
