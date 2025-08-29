@@ -18,6 +18,8 @@ gps <- read.csv('./data/LSWT_rates_of_change_literature.csv',
 gps$rate_C_year <- as.numeric(gps$rate_C_year)
 gps$n_lakes <- as.numeric(gps$n_lakes)
 
+length(unique(gps$citation))
+unique(gps$citation)
 # change the spatial extent so it's either point, region, or global
 gps <- gps %>% 
   mutate(spatial_extent = recode(spatial_extent,
@@ -163,62 +165,3 @@ description_plot <- ggarrange(p1, histos, nrow = 2,
 description_plot
 ggsave('./figures/landsat_7/map_histograms_lit_review.png', description_plot, 
        dpi = 300, units = 'mm', height = 400, width = 650, scale = 0.3)
-
-################################################################################
-
-# split temporal aggregation into season and day/night
-gps <- gps %>% 
-  separate(temporal_aggregation, into = c("temporal_aggregation", "day_night"), 
-           sep = " \\(|\\)", extra = "drop", fill = "right") %>% 
-  mutate(day_night = ifelse(is.na(day_night), 'day', day_night))
-  
-
-gps <- gps %>% 
-  group_by(temporal_aggregation) %>% 
-  mutate(n_time = n(),
-         facet_label = paste0(temporal_aggregation, ' (n = ', n_time, ')'))
-
-gps$facet_label <- factor(gps$facet_label,
-                          levels = 
-                            c('spring (n = 10)','summer (n = 39)', 
-                              'autumn (n = 11)', 'winter (n = 13)', 
-                              'dry season (n = 1)', 'pre-rainy (n = 1)', 
-                              'rainy (n = 1)','post-rainy (n = 1)',
-                              'annual (n = 112)'))
-
-time <- gps %>% 
-  #filter(n_lakes < 25000) %>% 
-  ggplot() + 
-  geom_segment(aes(x = min_year, xend = max_year, y = rate_C_year, yend = rate_C_year,
-                   color = day_night), size = 0.6) +
-  facet_wrap(~facet_label, ncol = 4) +
-  scale_color_manual(values = c('darkorange', 'black')) +
-  theme_bw() +
-  xlab('Duration of study') +
-  ylab('Trend in LSWT (°C/year)') +
-  labs(color = 'Day or night time?') +
-  theme(axis.text.x = element_text(angle = 55, hjust = 1))
-time
-
-ggsave('./figures/landsat_7/timeframe_duration_lit_review.png', time, 
-       dpi = 300, units = 'mm', height = 400, width = 800, scale = 0.27)
-
-gps %>% 
-  filter(n_lakes < 25000) %>% 
-  ggplot() + 
-  geom_segment(aes(x = min_year, xend = max_year, y = rate_C_year, yend = rate_C_year, 
-                   color = method_LSWT_standard), size = 1) +
-  facet_wrap(~facet_label) +
-  #scale_color_viridis_c(option = "viridis", direction = -1) +
-  theme_bw() +
-  xlab('Duration of study') +
-  ylab('Trend in LSWT (°C/year)') +
-  labs(color = 'Number of lakes')
-
-# number of studies that have more than one entry
-table(gps$citation_short)
-gps %>% 
-  ungroup() %>% 
-  count(citation_short) %>% 
-  filter(n >1) %>% 
-  summarise(n_repeated = n())
