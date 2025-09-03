@@ -60,13 +60,6 @@ data_sub <- data_long %>%
   group_by(year, LID, season) %>% 
   summarise(mean_temp = mean(interp, na.rm = TRUE))
 
-
-ggplot(data_sub, aes(x = as.Date(year), y = mean_temp, color = season)) +
-  geom_point() +
-  facet_wrap(~season) +
-  geom_smooth(method = 'lm')
-
-
 # calculate the rate of change in temperature
 sen <- data_sub %>% 
   group_by(LID, season) %>% 
@@ -83,24 +76,34 @@ sen$season <- factor(sen$season, levels = c('annual', 'winter',
 # write as csv all trends across seasons and annual
 write.csv(sen, './data/output/LSWT_trends_by_season_annual.csv', row.names = FALSE)
 
-lswt_season <- ggplot(sen, aes(y = fct_rev(season), x = sen_slope, fill = season)) +
+lswt_season <- ggplot(sen, aes(x = fct_rev(season), y = sen_slope, fill = season)) +
   geom_boxplot(alpha = 0.9) +
   geom_jitter(alpha = 0.1) +
   theme_bw() +
   scale_fill_manual(values = c("#454545", "#96C0B7", "#FFB84D", "#EE6C4D", "#A8D08D")) +
-  geom_vline(xintercept = 0, size = 1) +
-#  stat_compare_means(method = 'anova') +
-#  stat_compare_means(comparisons = list(c("spring", "summer"), c("spring", "autumn"), c("spring", "winter"), 
-#                                        c("summer", "autumn"), c("summer", "winter"), c("autumn", "winter")), 
-#                     method = "t.test") +
-  xlab('Rate of change in LSWT (°C/year)') +
-  ylab('Season') +
+  geom_hline(yintercept = 0, size = 1) +
+  ylab('Rate of change in LSWT (°C/year)') +
+  xlab('Season') +
   theme(legend.position = 'none',
         text = element_text(size = 14)) 
 lswt_season
 
 ggsave('./figures/landsat_7/rate_of_change_season.png', lswt_season, 
-       dpi = 300, units = 'mm', height = 400, width = 450, scale = 0.3)
+       dpi = 300, units = 'mm', height = 400, width = 450, scale = 0.4)
+
+### Alt figure with lines for LID
+ggplot(sen, aes(x = fct_rev(season), y = sen_slope, fill = season)) +
+  geom_line(aes(x = fct_rev(season), y = sen_slope, color = as.numeric(LID),
+                group = LID), alpha = 0.7) +
+  geom_boxplot(alpha = 0.9) +
+  theme_bw() +
+  scale_color_gradient(low = "black", high = "lightgray") +
+  scale_fill_manual(values = c("#454545", "#96C0B7", "#FFB84D", "#EE6C4D", "#A8D08D")) +
+  geom_hline(yintercept = 0, size = 1) +
+  ylab('Rate of change in LSWT (°C/year)') +
+  xlab('Season') +
+  theme(legend.position = 'none',
+        text = element_text(size = 14)) 
 
 # run mixed-effects model to test for statistical differences
 model <- lmer(sen_slope ~ season + (1 | LID), data = sen)
