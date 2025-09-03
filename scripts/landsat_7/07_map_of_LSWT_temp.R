@@ -154,38 +154,48 @@ df_wtemp <- df_wtemp %>%
     sen_slope > -0.1 & sen_slope < -0.01 ~ "Mild Cooling",
     sen_slope >= -0.01 & sen_slope <= 0.01 ~ "No Change",
     sen_slope > 0.01 & sen_slope < 0.1 ~ "Mild Warming",
-    sen_slope >= 0.1 ~ "Strong Warming"
-  ))
+    sen_slope >= 0.1 ~ "Strong Warming"))
 
 df_wtemp$slope_cat <- factor(df_wtemp$slope_cat, levels = c('Strong Warming',
                                                             'Mild Warming',
                                                             'No Change',
                                                             'Mild Cooling',
-                                                            'Strong Cooling'))
+                                                            'Strong Cooling'),
+                             labels = c('Strong Warming: >= 0.1',
+                                        'Mild Warming: 0.01 to 0.1',
+                                        'No Change: -0.01 to 0.01',
+                                        'Mild Cooling: -0.1 to -0.01',
+                                        'Strong Cooling: <= -0.1'))
 
 map_categ <-  ggplot() +
-  geom_sf(data = nz_shapefile, fill = 'grey', color = 'black') +
+  geom_sf(data = nz_shapefile, fill = '#4D4D4D', color = 'black') +
   theme_bw() +
   geom_point(data = df_wtemp, 
-             aes(x = lon, y = lat, color = slope_cat), 
-             size = 2)  +
+             aes(x = lon, y = lat, color = slope_cat)) +
+  geom_point(data = df_wtemp, 
+             aes(x = lon, y = lat, fill = slope_cat, group = slope_cat), 
+             shape = 21, color = 'black', size = 2)  +
   theme_bw() +
-  labs(color = 'Rate of Change') +
-  scale_color_manual(
-    values = c(
-      "Strong Cooling" = '#00316E',
-      "Mild Cooling" = "#8098B7",
-      "No Change" = 'white',
-      "Mild Warming" = "#F299A3",
-      "Strong Warming" = '#ca0020')) +
+  scale_fill_manual(values = c('Strong Cooling: <= -0.1' = '#00316E',
+                               'Mild Cooling: -0.1 to -0.01' = "#8098B7",
+                               'No Change: -0.01 to 0.01' = 'white',
+                               'Mild Warming: 0.01 to 0.1' = "#F299A3",
+                               'Strong Warming: >= 0.1' = '#ca0020')) +
+  scale_color_manual(values = c('Strong Cooling: <= -0.1' = '#00316E',
+                                'Mild Cooling: -0.1 to -0.01' = "#8098B7",
+                                'No Change: -0.01 to 0.01' = 'white',
+                                'Mild Warming: 0.01 to 0.1' = "#F299A3",
+                                'Strong Warming: >= 0.1' = '#ca0020')) +
   xlab('Longitude') +
   ylab('Latitude') +
-  guides(size = 'none') +
+  labs(fill = 'Rate of Change') +
+  guides(size = 'none',
+         color = 'none') +
   theme(text = element_text(size = 12),
         legend.text = element_text(size = 10),
-        legend.position = "left",
-        legend.direction = "vertical",
-        legend.box = "vertical") 
+        legend.position = "left", # or left
+        legend.direction = "vertical")
+        #legend.box = "vertical") 
 map_categ
 
 map_cat_hist <- ggMarginal(map_categ, 
@@ -197,17 +207,17 @@ map_cat_hist <- ggMarginal(map_categ,
 map_cat_hist
 
 ggsave('./figures/landsat_7/map_categories_LSWT.png', map_cat_hist,
-       dpi = 300, units = 'mm', height = 400, width = 350, scale = 0.4)
+       dpi = 300, units = 'mm', height = 400, width = 400, scale = 0.4)
 
-a <- ggplot(df_wtemp, aes(x = sen_slope)) +
+a <- ggplot(df_wtemp, aes(y = sen_slope)) +
   geom_density(size = 2, fill = 'black', alpha = 0.7) +
   theme_bw() +
-  geom_vline(xintercept = 0) +
-  xlab('Rate of change in LSWT (°C/year)') +
-  ylab('Density') +
+  geom_hline(yintercept = 0) +
+  ylab('Rate of change in LSWT (°C/year)') +
+  xlab('Density') +
   theme(text = element_text(size = 16))
         
 a
 ggsave('./figures/landsat_7/density_all_lakes.png', a,
-       dpi = 300, units = 'mm', height = 400, width = 300, scale = 0.34)
+       dpi = 300, units = 'mm', height = 400, width = 250, scale = 0.34)
 
