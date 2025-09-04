@@ -14,6 +14,10 @@ gps <- gps %>%
            sep = " \\(|\\)", extra = "drop", fill = "right") %>% 
   mutate(day_night = ifelse(is.na(day_night), 'day', day_night))
 
+# and remove the night measurements
+gps <- gps %>% 
+  filter(day_night!='night')
+
 
 gps <- gps %>% 
   group_by(temporal_aggregation) %>% 
@@ -22,11 +26,11 @@ gps <- gps %>%
 
 gps$facet_label <- factor(gps$facet_label,
                           levels = 
-                            c('spring (n = 10)','summer (n = 39)', 
-                              'autumn (n = 11)', 'winter (n = 13)', 
+                            c('spring (n = 10)','summer (n = 43)', 
+                              'autumn (n = 11)', 'winter (n = 11)', 
                               'dry season (n = 1)', 'pre-rainy (n = 1)', 
                               'rainy (n = 1)','post-rainy (n = 1)',
-                              'annual (n = 112)'))
+                              'annual (n = 99)'))
 
 a <- gps %>% 
   filter(temporal_aggregation %in% c('annual', 'spring', 'summer', 'autumn', 'winter')) %>% 
@@ -104,3 +108,5 @@ ggplot(multiple_seasons, aes(x = n_seasons, fill = season_list)) +
 
 table(multiple_seasons$n_seasons)
 
+
+table(gps$aggregation_mean_min_max_etc)
