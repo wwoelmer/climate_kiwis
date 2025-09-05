@@ -217,20 +217,19 @@ season_ann <- left_join(sen, ann)
 season_ann <- season_ann %>% 
   filter(season!='annual')
 
+
 a <- ggplot(season_ann, aes(x = sen_slope, y = annual_trend, color = fct_rev(season))) +
   geom_point() +
-  geom_smooth(method = 'lm') +
-  facet_wrap(~season) +
+  geom_smooth(method = 'lm', color = 'black') +
+  facet_wrap(~fct_rev(season), nrow = 1) +
   theme_bw() +
-  stat_poly_eq(
-    aes(label = ..rr.label.. ),
-    formula = y ~ x,
-    parse = TRUE,
-    color = 'black',
-    label.x.npc = "left",  # position inside plot area
-    label.y.npc = 0.95) +
+  stat_cor(method = 'pearson',
+           label.x.npc = 'left',
+           label.y.npc = 0.95,
+           color = 'black',
+           cor.coef.name = 'r',
+           aes(label = ..r.label..)) +
   scale_color_manual(values = c("#A8D08D", "#EE6C4D","#FFB84D", "#96C0B7")) +
-  geom_abline(slope = 1, intercept = 0) +
   geom_hline(yintercept = 0) +
   geom_vline(xintercept = 0) +
   labs(color = 'Season') +
@@ -262,19 +261,71 @@ compare_summary$compare <- factor(compare_summary$compare, levels = c('cool seas
                                                                       'both cool',
                                                                       'warm season, cool year'))
 
+# add quadrants for each
+compare_summary <- compare_summary %>% 
+  mutate(x = case_when(compare=='cool season, warm year' ~ -0.47,
+                       compare=='both warm' ~ 0.39,
+                       compare=='both cool' ~ -0.47,
+                       compare=='warm season, cool year' ~ 0.39),
+         y = case_when(compare=='cool season, warm year' ~ 0.2,
+                       compare=='both warm' ~ 0.25,
+                       compare=='both cool' ~ -0.25,
+                       compare=='warm season, cool year' ~ -0.25)) %>% 
+  mutate(label= paste0('n = ', count))
+
+
+with_labs <- ggplot(season_ann, aes(x = sen_slope, y = annual_trend, color = fct_rev(season))) +
+  geom_point() +
+  geom_smooth(method = 'lm', color = 'black') +
+  facet_wrap(~fct_rev(season), nrow = 1) +
+  geom_text(data = compare_summary,
+            aes(x = x, y = y, label = label),
+            color = 'black') +
+  theme_bw() +
+  stat_cor(method = 'pearson',
+           label.x.npc = 'left',
+           label.y = 0.25,
+           color = 'black',
+           cor.coef.name = 'r',
+           aes(label = ..r.label..)) +
+  
+  scale_color_manual(values = c("#A8D08D", "#EE6C4D","#FFB84D", "#96C0B7")) +
+  geom_hline(yintercept = 0) +
+  geom_vline(xintercept = 0) +
+  labs(color = 'Season') +
+  ylab('Annual trend (°C/year)') +
+  xlab('Seasonal trend (°C/year)') +
+  theme(legend.position = 'bottom')
+with_labs
+
+ggsave('./figures/landsat_7/compare_annual_seasonal_trends_with_labels.png', with_labs, 
+       dpi = 300, units = 'mm', height = 250, width = 600, scale = 0.35)
+
 b <- ggplot(compare_summary, aes(x = compare, y = percent, fill = season)) +
   geom_col(position = 'dodge') +
-  facet_wrap(~compare, scales = 'free') +
+  facet_wrap(~compare, scales = 'free', nrow = 1) +
   scale_fill_manual(values = c("#A8D08D", "#EE6C4D","#FFB84D", "#96C0B7")) +
   theme_bw() +
   ylim(0, 50) +
+  #stat_compare_means(method = 'anova') +
   theme(axis.ticks.x = element_blank(),
         axis.text.x = element_blank()) +
-  xlab('Season')
-  
-ggarrange(a, b, common.legend = TRUE)
+  xlab('Season') +
+  ylab('Percent of lakes')
+b  
+
+season_compare <- ggarrange(a, b, common.legend = TRUE, labels = 'auto',
+                            nrow = 2)
+season_compare
 
 
+ggsave('./figures/landsat_7/compare_annual_seasonal_trends.png', season_compare, 
+       dpi = 300, units = 'mm', height = 300, width = 450, scale = 0.4)
+
+
+
+###########################################################################################
+# wide version , height = 250, width = 600, scale = 0.4
 # read in FENZ drivers and keann# read in FENZ drivers and keep the relevant ones
 fenz <- read.csv('./data/drivers/FENZ_Lake_Update_2024_25.09.2024.csv')
 fenz$LID <- as.character(fenz$LID)
