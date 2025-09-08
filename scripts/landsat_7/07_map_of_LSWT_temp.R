@@ -37,13 +37,6 @@ df <- df %>%
                          'North', 'South')) %>% 
   arrange(region, city)
 
-
-df %>% 
-  group_by(district) %>% 
-  mutate(n_lakes = n()) %>% 
-  ggplot(aes(x = n_lakes, y = district)) +
-  geom_col()
-
 # format easting and northing into lat/long
 df_wtemp <- df %>% 
   sf::st_as_sf(coords = c("easting_NZTM", "northing_NZTM"), crs = 2193)   # NZGD2000 / New Zealand Transverse Mercator 2000
@@ -77,7 +70,7 @@ wtemp <-  ggplot() +
                        low = '#00316E', 
                        midpoint = 0) + 
   theme_bw() +
-  labs(fill = 'Rate of Change') +
+  labs(fill = 'Trend') +
   xlab('Longitude') +
   ylab('Latitude') +
   guides(size = 'none') +
@@ -142,7 +135,7 @@ map_categ <-  ggplot() +
                                 'Strong Warming: >= 0.1' = '#ca0020')) +
   xlab('Longitude') +
   ylab('Latitude') +
-  labs(fill = 'Rate of Change') +
+  labs(fill = 'LSWT Trend') +
   guides(size = 'none',
          color = 'none') +
   theme(text = element_text(size = 12),
@@ -167,7 +160,7 @@ a <- ggplot(df_wtemp, aes(y = sen_slope)) +
   geom_density(size = 2, fill = 'black', alpha = 0.7) +
   theme_bw() +
   geom_hline(yintercept = 0) +
-  ylab('Rate of change in LSWT (°C/year)') +
+  ylab('LSWT Trend (°C/year)') +
   xlab('Density') +
   theme(text = element_text(size = 16))
         
@@ -178,7 +171,7 @@ ggsave('./figures/landsat_7/density_all_lakes.png', a,
 
 
 ggplot(df_wtemp, aes(y = sen_slope, fill = slope_cat)) +
-  geom_density(size = 2, alpha = 0.7) +
+  geom_density(alpha = 0.7) +
   theme_bw() +
   scale_fill_manual(values = c('Strong Cooling: <= -0.1' = '#00316E',
                                'Mild Cooling: -0.1 to -0.01' = "#8098B7",
@@ -199,7 +192,7 @@ b <- ggplot(df_wtemp, aes(x = sen_slope)) +
                                'No Change: -0.01 to 0.01' = 'white',
                                'Mild Warming: 0.01 to 0.1' = "#F299A3",
                                'Strong Warming: >= 0.1' = '#ca0020')) +
-  xlab('Rate of change in LSWT (°C/year)') +
+  xlab('LSWT Trend (°C/year)') +
   ylab('Number of lakes') +
   geom_hline(yintercept = 0) +
   guides(fill = 'none') +
@@ -208,10 +201,5 @@ b
 
 ggsave('./figures/landsat_7/histogram_lakes_categories.png', b,
        dpi = 300, units = 'mm', height = 375, width = 250, scale = 0.34)
+
 table(df_wtemp$slope_cat)
-
-library(patchwork)
-
-map_cat_hist + a
-
-a/b + map_cat_hist
