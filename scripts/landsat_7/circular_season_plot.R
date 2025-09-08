@@ -106,15 +106,20 @@ m_warm <- group_df %>%
   theme_void() +
   theme(strip.text = element_text(size = 10)) +
   labs(fill = "Trend") +
-  ggtitle('Majority warming')
+  ggtitle('Majority warming (n = 136)')
 m_warm
 
 m_cool <- group_df %>% 
   filter(pattern %in% c('cool_cool_cool_cool',
-                        'cool_cool_cool_warm',
-                        'cool_cool_warm_cool',
                         'cool_warm_cool_cool',
+                        'cool_cool_warm_cool',
+                        'cool_cool_cool_warm',
                         'warm_cool_cool_cool')) %>% 
+  mutate(pattern = factor(pattern, levels = c(c('cool_cool_cool_cool',
+                                                'warm_cool_cool_cool',
+                                                'cool_warm_cool_cool',
+                                                'cool_cool_warm_cool',
+                                                'cool_cool_cool_warm')))) %>% 
   ggplot(aes(x = x, y = scaled_y, fill = trend_qual, group = pattern)) +
   geom_col(width = 1, color = "white") +
   scale_fill_manual(values = c("warm" = "firebrick", "cool" = "steelblue")) +
@@ -122,9 +127,10 @@ m_cool <- group_df %>%
   coord_polar() +
   facet_wrap(~pattern, labeller = labeller(pattern = labels_named), nrow = 1) +
   theme_void() +
-  theme(strip.text = element_text(size = 10)) +
-  labs(fill = "Trend") +
-  ggtitle('Majority cooling')
+  theme(strip.text = element_text(size = 10),
+        legend.position = 'none') +
+  #(fill = "Trend") +
+  ggtitle('Majority cooling (n = 62)')
 m_cool
 
 split <- group_df %>% 
@@ -134,6 +140,12 @@ split <- group_df %>%
                         'cool_warm_cool_warm',
                         'warm_cool_cool_warm',
                         'cool_warm_warm_cool')) %>% 
+  mutate(pattern = factor(pattern, levels = c('cool_warm_warm_cool',
+                                              'cool_cool_warm_warm',
+                                              'warm_cool_cool_warm',
+                                              'warm_warm_cool_cool',
+                                              'warm_cool_warm_cool',
+                                              'cool_warm_cool_warm'))) %>% 
   ggplot(aes(x = x, y = scaled_y, fill = trend_qual, group = pattern)) +
   geom_col(width = 1, color = "white") +
   scale_fill_manual(values = c("warm" = "firebrick", "cool" = "steelblue")) +
@@ -141,9 +153,21 @@ split <- group_df %>%
   coord_polar() +
   facet_wrap(~pattern, labeller = labeller(pattern = labels_named), nrow = 1) +
   theme_void() +
-  theme(strip.text = element_text(size = 10)) +
+  theme(strip.text = element_text(size = 10),
+        plot.margin = margin(0, 1, 0, 1)) +
   labs(fill = "Trend") +
-  ggtitle('Equal warming and cooling')
+  ggtitle('Equal warming and cooling (n = 114)')
 split
 
-ggarrange(m_warm, split, m_cool, common.legend = TRUE, labels = 'auto', ncol = 1)
+
+ggsave('./figures/landsat_7/majority_warm.png', m_warm, 
+       dpi = 300, units = 'mm', height = 250, width = 600, scale = 0.35)
+ggsave('./figures/landsat_7/majority_cool.png', m_cool, 
+       dpi = 300, units = 'mm', height = 250, width = 600, scale = 0.35)
+ggsave('./figures/landsat_7/equal_warm_cool.png', split, 
+       dpi = 300, units = 'mm', height = 250, width = 710, scale = 0.35)
+
+
+ggarrange(m_warm, split, m_cool, common.legend = TRUE, labels = 'auto', ncol = 1,
+          legend = 'right')
+
