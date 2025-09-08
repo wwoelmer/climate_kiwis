@@ -82,7 +82,7 @@ lswt_season <- ggplot(sen, aes(x = fct_rev(season), y = sen_slope, fill = season
   theme_bw() +
   scale_fill_manual(values = c("#454545", "#96C0B7", "#FFB84D", "#EE6C4D", "#A8D08D")) +
   geom_hline(yintercept = 0, size = 1) +
-  ylab('Rate of change in LSWT (°C/year)') +
+  ylab('LSWT Trend (°C/year)') +
   xlab('Season') +
   theme(legend.position = 'none',
         text = element_text(size = 14)) 
@@ -92,7 +92,7 @@ ggsave('./figures/landsat_7/rate_of_change_season.png', lswt_season,
        dpi = 300, units = 'mm', height = 400, width = 450, scale = 0.4)
 
 ### Alt figure with lines for LID
-ggplot(sen, aes(x = fct_rev(season), y = sen_slope, fill = season)) +
+lswt_season_lines <- ggplot(sen, aes(x = fct_rev(season), y = sen_slope, fill = season)) +
   geom_line(aes(x = fct_rev(season), y = sen_slope, color = as.numeric(LID),
                 group = LID), alpha = 0.7) +
   geom_boxplot(alpha = 0.9) +
@@ -100,10 +100,13 @@ ggplot(sen, aes(x = fct_rev(season), y = sen_slope, fill = season)) +
   scale_color_gradient(low = "black", high = "lightgray") +
   scale_fill_manual(values = c("#454545", "#96C0B7", "#FFB84D", "#EE6C4D", "#A8D08D")) +
   geom_hline(yintercept = 0, size = 1) +
-  ylab('Rate of change in LSWT (°C/year)') +
+  ylab('LSWT Trend (°C/year)') +
   xlab('Season') +
   theme(legend.position = 'none',
-        text = element_text(size = 14)) 
+        text = element_text(size = 14))
+
+ggsave('./figures/landsat_7/rate_of_change_season_lines.png', lswt_season_lines, 
+       dpi = 300, units = 'mm', height = 400, width = 450, scale = 0.4)
 
 # run mixed-effects model to test for statistical differences
 model <- lmer(sen_slope ~ season + (1 | LID), data = sen)
@@ -293,8 +296,8 @@ with_labs <- ggplot(season_ann, aes(x = sen_slope, y = annual_trend, color = fct
   geom_hline(yintercept = 0) +
   geom_vline(xintercept = 0) +
   labs(color = 'Season') +
-  ylab('Annual trend (°C/year)') +
-  xlab('Seasonal trend (°C/year)') +
+  ylab('Annual LSWT trend (°C/year)') +
+  xlab('Seasonal LSWT trend (°C/year)') +
   theme(legend.position = 'bottom')
 with_labs
 
