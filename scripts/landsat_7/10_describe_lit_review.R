@@ -21,11 +21,10 @@ gps <- gps %>%
   filter(citation_short!='This study')
 
 mean(gps$rate_C_year, na.rm = TRUE)
-sum(gps$n_lakes, na.rm = TRUE)
 
 # change the spatial extent so it's either point, region, or global
 gps <- gps %>% 
-  mutate(spatial_extent = recode(spatial_extent,
+  dplyr::mutate(spatial_extent = dplyr::recode(spatial_extent,
                                  'country' = 'region'))
 
 gps$spatial_extent <- factor(gps$spatial_extent, levels = c('point', 'region', 'global'))
@@ -82,6 +81,9 @@ lit <- lit %>%
   )
 
 table(lit$search_engine)
+
+# number of studies screened
+length(unique(lit$title))
 
 
 dups <- lit %>% 
