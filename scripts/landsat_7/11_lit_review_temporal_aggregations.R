@@ -1,7 +1,12 @@
 # timeframe figures
+library(tidyverse)
+library(ggridges)
+library(RColorBrewer)
 
 gps <- read.csv('./data/LSWT_rates_of_change_literature.csv',
                 fileEncoding = 'latin1')
+gps <- gps %>% 
+  rename(rate_C_year = ï..rate_C_year)
 
 gps$rate_C_year <- as.numeric(gps$rate_C_year)
 gps$n_lakes <- as.numeric(gps$n_lakes)
@@ -14,48 +19,65 @@ gps <- gps %>%
            sep = " \\(|\\)", extra = "drop", fill = "right") %>% 
   mutate(day_night = ifelse(is.na(day_night), 'day', day_night))
 
+
+total_seasons <- sum(table(gps$temporal_aggregation))
+
+table(gps$temporal_aggregation)
+table(gps$aggregation_cleaned)
+table(gps$day_night)
+
 # and remove the night measurements
-gps <- gps %>% 
+gps_day <- gps %>% 
   filter(day_night!='night')
 
 
-gps <- gps %>% 
+gps_day <- gps_day %>% 
   group_by(temporal_aggregation) %>% 
   mutate(n_time = n(),
          facet_label = paste0(temporal_aggregation, ' (n = ', n_time, ')'))
 
-gps$facet_label <- factor(gps$facet_label,
+gps_day$facet_label <- factor(gps_day$facet_label,
                           levels = 
-                            c('spring (n = 10)','summer (n = 43)', 
-                              'autumn (n = 11)', 'winter (n = 11)', 
+                            c('spring (n = 15)','summer (n = 37)', 
+                              'autumn (n = 14)', 'winter (n = 16)', 
                               'dry season (n = 1)', 'pre-rainy (n = 1)', 
                               'rainy (n = 1)','post-rainy (n = 1)',
-                              'annual (n = 99)'))
+                              'annual (n = 71)'))
 
-a <- gps %>% 
+
+
+a <- gps_day %>% 
   filter(temporal_aggregation %in% c('annual', 'spring', 'summer', 'autumn', 'winter')) %>% 
+  mutate(violin_x = max(max_year, na.rm = TRUE) + 2) %>% 
   ggplot() + 
+  geom_point(aes(x = min_year, y = rate_C_year, alpha = 0.01, color = temporal_aggregation)) +
+  geom_point(aes(x = max_year, y = rate_C_year, alpha = 0.01, color = temporal_aggregation)) +
   geom_segment(aes(x = min_year, xend = max_year, y = rate_C_year, yend = rate_C_year,
                    color = temporal_aggregation), size = 0.7) +
-  facet_wrap(~facet_label, nrow = 1) +
-  scale_color_manual(values = c("#454545", "#96C0B7", "#FFB84D", "#EE6C4D", "#A8D08D")) +
+  facet_wrap(~temporal_aggregation, ncol = 5) +
+  scale_color_manual(values = c("#A8D08D", "#EE6C4D", "#FFB84D", "#96C0B7", "#454545")) +
+  scale_fill_manual(values = c("#A8D08D", "#EE6C4D", "#FFB84D", "#96C0B7", "#454545")) +
   theme_bw() +
+  geom_hline(yintercept = 0) +
   xlab('Duration of study') +
-  ylab('Trend in LSWT (°C/year)') +
+  ylab('LSWT Rate (°C/year)') +
   labs(color = 'Temporal aggregation') +
-  theme(axis.text.x = element_text(angle = 55, hjust = 1))
+  theme(axis.text.x = element_text(angle = 55, hjust = 1),
+        legend.position = 'none')
 a
 
 ggsave('./figures/landsat_7/timeframe_duration_lit_review.png', a, 
-       dpi = 300, units = 'mm', height = 250, width = 800, scale = 0.27)
+       dpi = 300, units = 'mm', height = 450, width = 700, scale = 0.27)
 
+table(gps$day_night)
 
-b <- gps %>% 
+##################################
+b <- gps_day %>% 
   filter(temporal_aggregation %in% c('annual', 'spring', 'summer', 'autumn', 'winter')) %>% 
   ggplot() + 
   geom_density(aes(y = rate_C_year,
                    fill = temporal_aggregation), size = 0.7) +
-  facet_wrap(~facet_label, nrow = 1) +
+  facet_wrap(~temporal_aggregation, ncol = 5) +
   geom_hline(yintercept = 0) +
   scale_fill_manual(values = c("#454545", "#96C0B7", "#FFB84D", "#EE6C4D", "#A8D08D")) +
   theme_bw() +
@@ -82,10 +104,12 @@ multiple_seasons <- gps %>%
 multiple_seasons$season_list <- factor(multiple_seasons$season_list, 
                                        levels = c('annual',
                                                   'annual, summer',
+                                                  "annual, summer, winter",
                                                   'annual, spring, summer',
                                                   "annual, autumn, spring, summer, winter",
-                                                  "annual, dry season, post-rainy, pre-rainy, rainy",
+                                                  "annual, dry season, post rainy, pre rainy, rainy",
                                                   "autumn, spring, summer, winter",
+                                                  "autumn, spring, summer",
                                                   "autumn, summer",
                                                   "summer",
                                                   "winter"))
@@ -103,10 +127,13 @@ ggplot(multiple_seasons, aes(x = n_seasons, fill = season_list)) +
     vjust = -0.3) +
   xlab('# of seasons') +
   ylab('# of studies') +
-  labs(fill = 'Seasons included') +
-  scale_fill_manual(values = my_colors)
+  labs(fill = 'Seasons included') 
+
+# studies reporting just one citation
+42/(42+12+1)
+12/(42+12+1)
 
 table(multiple_seasons$n_seasons)
-
-
-table(gps$aggregation_mean_min_max_etc)
+gps %>% 
+  group_by(temporal_aggregation) %>% 
+  summarise(CV = sd(rate_C_year)/mean(rate_C_year))
