@@ -70,6 +70,8 @@ ggsave('./figures/landsat_7/timeframe_duration_lit_review.png', a,
        dpi = 300, units = 'mm', height = 450, width = 700, scale = 0.27)
 
 table(gps$day_night)
+27/184
+
 
 ##################################
 b <- gps_day %>% 
