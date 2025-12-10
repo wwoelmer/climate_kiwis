@@ -22,10 +22,9 @@ gps$n_lakes <- as.numeric(gps$n_lakes)
 
 # number of unique studies and rates per study
 gps %>%
-  summarise(
-    n_studies = n_distinct(citation),
-    n_rates   = n()   # total rows = total rates
-  )
+  summarise(n_studies = n_distinct(citation),
+            n_rates   = n())   # total rows = total rates
+  
 
 # change the spatial extent so it's either point, region, or global
 gps <- gps %>% 
@@ -91,6 +90,23 @@ ggsave('./figures/landsat_7/map_with_side_bars.png', map_bars,
        dpi = 300, units = 'mm', height = 400, width = 650, scale = 0.3)
 
 
+# calculate the number of studies in the northern hemisphere
+n_hemi <- gps_nodups %>% 
+  mutate(hemisphere = ifelse(lat > 0, 'north', 'south')) %>% 
+  summarise(pct_north = sum(hemisphere=='north')/n())
+
+# and the number of studies in n america, europe, china
+region_counts <- gps_nodups %>% 
+  mutate(location = case_when(
+    lat >= 5   & lat <= 85  & long >= -170 & long <= -50  ~ "North America",
+    lat >= 35  & lat <= 70  & long >=  -10 & long <=  40  ~ "Europe",
+    lat >= 18  & lat <= 54  & long >=   73 & long <= 135  ~ "China",
+    TRUE ~ "Other"
+  )) %>%
+  count(location)
+
+
+
 lakes <- gps_nodups %>% 
   filter(n_lakes < 25000) %>% 
   ggplot(aes(x = n_lakes, fill = method_LSWT_standard)) +
@@ -150,3 +166,13 @@ description_plot <- ggarrange(p2, histos, nrow = 2,
 description_plot
 ggsave('./figures/landsat_7/map_histograms_lit_review.png', description_plot, 
        dpi = 300, units = 'mm', height = 400, width = 650, scale = 0.3)
+
+## calculate summary stats
+gps_nodups %>% 
+  summarise(median_lakes = median(n_lakes),
+            median_years = median(n_years))
+
+table(gps_nodups$method_LSWT_standard)
+
+# number of lakes trends
+sum(gps_nodups$n_lakes)
