@@ -1,4 +1,3 @@
-# add lat long to the remote sensing lakes
 library(broom)
 library(tidyverse)
 library(trend)
@@ -72,6 +71,7 @@ ggplot(data_sub, aes(x = mean_temp, y = district, fill = district)) +
   geom_density_ridges() +
   theme(legend.position = 'none')
 
+# calculate sen slope and p values
 sen <- data_sub %>% 
   group_by(district, LID) %>% 
   summarise(sen_slope = sens.slope(mean_temp)$estimates,
