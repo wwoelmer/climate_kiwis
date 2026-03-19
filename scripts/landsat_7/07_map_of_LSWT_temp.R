@@ -5,7 +5,6 @@ library(lubridate)
 library(ggpubr)
 library(sf)
 library(aemetools)
-#install.packages('ggExtra')
 library(ggExtra)
 
 # read LSWT output
@@ -203,3 +202,4 @@ ggsave('./figures/landsat_7/histogram_lakes_categories.png', b,
        dpi = 300, units = 'mm', height = 375, width = 250, scale = 0.34)
 
 table(df_wtemp$slope_cat)
+
