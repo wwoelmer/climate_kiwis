@@ -1,7 +1,9 @@
 library(tidyverse)
 library(zoo)
 library(geoTS)
+library(plotly)
 
+#data from Mat
 ls <- read.csv('./data/landsat7_data.csv')
 ls <- ls %>% 
   dplyr::select(system.index, LID, Name, LST)
@@ -35,6 +37,7 @@ length(unique(ls$LID))
 write.csv(ls, './data/landsat7_data_formatted_original_dates.csv', row.names = FALSE)
 
 
+# plot 1 lake as an example
 ls %>% 
   filter(LID=='1') %>% 
   ggplot(aes(x = as.Date(date), y = LST, color = LID)) +
@@ -50,7 +53,7 @@ ls %>%
 length(unique(ls$LID))
 
 
-#some summary stats, number of years per lake, number of obs per year
+# calculate summary stats, number of years per lake, number of obs per year
 n_year_per_lake <- ls %>% 
   mutate(year = year(date)) %>% 
   group_by(LID) %>% 
@@ -233,8 +236,6 @@ ls_hants %>%
 # calculate the percent of obs that were interpolated
 sum(is.na(ls_hants$mean_LST))/nrow(ls_hants)
 
-
-
 length(unique(ls_hants$LID))
 length(unique(ls_fill$LID))
 
@@ -254,6 +255,7 @@ ggplotly(ls_hants %>%
   geom_point(aes(x = year, y = interp_mean, color = 'interp')) +
   geom_point(aes(x = year, y = hants_mean, color = 'hants')) )
 
+# figure out what's up with the high values in early 2000's
 ls_hants %>% 
   mutate(year = year(date_dum)) %>% 
   group_by(LID, year) %>% 
@@ -282,15 +284,6 @@ ls_hants <- ls_hants %>%
   rename(#lake_id = LID,
          Date = date_dum,
          obs = mean_LST)
-
-ggplot(ls_hants, aes(x = as.Date(Date), y = obs, color = LID)) +
-  geom_point() 
-
-ggplot(ls_hants, aes(x = as.Date(Date), y = interp, color = LID)) +
-  geom_point() 
-
-ggplot(ls_hants, aes(x = as.Date(Date), y = hants, color = LID)) +
-  geom_point() 
 
 write.csv(ls_hants, './data/landsat7_QAQC.csv', row.names = FALSE)
 length(unique(ls_hants$LID))
