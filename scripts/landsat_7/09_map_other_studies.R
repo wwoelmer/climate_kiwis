@@ -1,14 +1,8 @@
-# make map of other studies
+# make map of studies from lit review
 library(tidyverse)
-#library(aemetools)
-#library(ggplot2)
 library(sf)
 library(rnaturalearth)
 library(rnaturalearthdata)
-#library(RColorBrewer)
-#library(scales)
-#library(MetBrewer)
-#library(viridis)
 library(ggpubr)
 library(ggExtra)
 
@@ -167,6 +161,29 @@ description_plot
 ggsave('./figures/landsat_7/map_histograms_lit_review.png', description_plot, 
        dpi = 300, units = 'mm', height = 400, width = 650, scale = 0.3)
 
+# map SI Figure map of rates over space, where rate is size
+p_SI <- ggplot() +
+  geom_sf(data = world, fill = 'gray', color = 'gray') +
+  geom_point(data = gps_nodups[gps_nodups$n_lakes < 5000,],
+             aes(x = long, y = lat,
+                 fill = rate_C_year, size = rate_C_year, shape = spatial_extent_simple),
+             color = "black", alpha = 0.8) +
+  scale_fill_gradient2(high = '#ca0020',
+                       mid = "white",         
+                       low = '#00316E', 
+                       midpoint = 0) + 
+  scale_shape_manual(values = c(23, 21)) +
+  theme_bw() +
+  labs(fill = 'Rate (°C/year)',
+       size = 'Rate (°C/year',
+       shape = 'Spatial extent') +
+  theme(legend.position = "left") 
+p_SI
+
+ggsave('./figures/landsat_7/SI_fig_lit_review_rates_map.png', p_SI, 
+       dpi = 300, units = 'mm', height = 400, width = 650, scale = 0.3)
+
+
 ## calculate summary stats
 gps_nodups %>% 
   summarise(median_lakes = median(n_lakes),
@@ -176,3 +193,4 @@ table(gps_nodups$method_LSWT_standard)
 
 # number of lakes trends
 sum(gps_nodups$n_lakes)
+
