@@ -76,11 +76,16 @@ lm_eqn <- function(model) {
 r2 <- round(summary(lm_temps)$r.squared, 2)
 n <- nrow(wtemp)
 
-ggplot(wtemp, aes(x = obs_insitu, y = obs_landsat, color = lake)) +
+p <- ggplot(wtemp, aes(x = obs_insitu, y = obs_landsat, color = lake)) +
   geom_point(size = 2) +
   geom_abline(slope = 1, intercept = 0) +
   theme_bw() +
   annotate("text", x = 10, y = 28, label = paste("n = ", n)) +  # Add n
-  annotate("text", x = 12, y = 30, label = lm_eqn(lm_temps), parse = TRUE)
+  annotate("text", x = 12, y = 30, label = lm_eqn(lm_temps), parse = TRUE) +
+  xlab('Water temperature in situ (C)') +
+  ylab('Water temperature Landsat (C)')
   
+ggsave('./figures/landsat_7/lm_landsat_insitu.png', p, 
+       dpi = 300, units = 'mm', height = 300, width = 550, scale = 0.5)
+
 length(unique(wtemp$lake))
