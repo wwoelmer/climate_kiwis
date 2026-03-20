@@ -117,9 +117,9 @@ map_categ <-  ggplot() +
   geom_sf(data = nz_shapefile, fill = '#4D4D4D', color = 'black') +
   theme_bw() +
   geom_point(data = df_wtemp, 
-             aes(x = lon, y = lat, color = slope_cat)) +
+             aes(x = lon, y = lat, color = fct_rev(slope_cat))) +
   geom_point(data = df_wtemp, 
-             aes(x = lon, y = lat, fill = slope_cat, group = slope_cat), 
+             aes(x = lon, y = lat, fill = fct_rev(slope_cat), group = slope_cat), 
              shape = 21, color = 'black', size = 2)  +
   theme_bw() +
   scale_fill_manual(values = c('Strong Cooling: <= -0.1' = '#00316E',
@@ -134,7 +134,7 @@ map_categ <-  ggplot() +
                                 'Strong Warming: >= 0.1' = '#ca0020')) +
   xlab('Longitude') +
   ylab('Latitude') +
-  labs(fill = 'LSWT Trend') +
+  labs(fill = 'LSWT trend') +
   guides(size = 'none',
          color = 'none') +
   theme(text = element_text(size = 12),
@@ -191,15 +191,15 @@ b <- ggplot(df_wtemp, aes(x = sen_slope)) +
                                'No Change: -0.01 to 0.01' = 'white',
                                'Mild Warming: 0.01 to 0.1' = "#F299A3",
                                'Strong Warming: >= 0.1' = '#ca0020')) +
-  xlab('LSWT Trend (°C/year)') +
+  xlab('LSWT trend (°C/year)') +
   ylab('Number of lakes') +
   geom_hline(yintercept = 0) +
   guides(fill = 'none') +
-  theme(text = element_text(size = 16))
+  theme(text = element_text(size = 12))
 b
 
 ggsave('./figures/landsat_7/histogram_lakes_categories.png', b,
-       dpi = 300, units = 'mm', height = 375, width = 250, scale = 0.34)
+       dpi = 300, units = 'mm', height = 350, width = 275, scale = 0.34)
 
 table(df_wtemp$slope_cat)
 
