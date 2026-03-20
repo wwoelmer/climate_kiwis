@@ -75,7 +75,7 @@ colors <- colorRampPalette(brewer.pal(11, "Spectral"))(n_colors)
 
 wtemp_atemp <- ggplot(df, aes(x = slope_temp, y = sen_slope, fill = city)) +
   geom_point() +
-  geom_boxplot(position = 'identity', width = 0.01, alpha = 0.9) +
+  geom_point(position = 'identity', width = 0.01, alpha = 0.9) +
   geom_smooth(aes(group = 1), method = 'lm', color = 'black') +
   theme_bw() +
   scale_fill_manual(values = colors) +
