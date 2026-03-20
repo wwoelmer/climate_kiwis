@@ -54,45 +54,33 @@ a <- gps_day %>%
   geom_point(aes(x = max_year, y = rate_C_year, alpha = 0.01, color = temporal_aggregation)) +
   geom_segment(aes(x = min_year, xend = max_year, y = rate_C_year, yend = rate_C_year,
                    color = temporal_aggregation), size = 0.7) +
-  facet_wrap(~temporal_aggregation, ncol = 5) +
+  facet_wrap(~facet_label, ncol = 5) +
   scale_color_manual(values = c("#A8D08D", "#EE6C4D", "#FFB84D", "#96C0B7", "#454545")) +
   scale_fill_manual(values = c("#A8D08D", "#EE6C4D", "#FFB84D", "#96C0B7", "#454545")) +
   theme_bw() +
   geom_hline(yintercept = 0) +
   xlab('Duration of study') +
-  ylab('LSWT Rate (°C/year)') +
+  ylab('LSWT trend (°C/year)') +
   labs(color = 'Temporal aggregation') +
   theme(axis.text.x = element_text(angle = 55, hjust = 1),
         legend.position = 'none')
 a
 
 ggsave('./figures/landsat_7/timeframe_duration_lit_review.png', a, 
-       dpi = 300, units = 'mm', height = 450, width = 700, scale = 0.27)
+       dpi = 300, units = 'mm', height = 300, width = 700, scale = 0.3)
+
+# mean rates by season
+mean_season <- gps_day %>% 
+  group_by(temporal_aggregation) %>% 
+  summarise(mean = mean(rate_C_year),
+            sd = sd(rate_C_year),
+            min = min(rate_C_year),
+            max = max(rate_C_year))
+mean_season
+write.csv(mean_season, './data/output/lit_review_summary_rates.csv', row.names = FALSE)
 
 table(gps$day_night)
 27/184
-
-
-##################################
-b <- gps_day %>% 
-  filter(temporal_aggregation %in% c('annual', 'spring', 'summer', 'autumn', 'winter')) %>% 
-  ggplot() + 
-  geom_density(aes(y = rate_C_year,
-                   fill = temporal_aggregation), size = 0.7) +
-  facet_wrap(~temporal_aggregation, ncol = 5) +
-  geom_hline(yintercept = 0) +
-  scale_fill_manual(values = c("#454545", "#96C0B7", "#FFB84D", "#EE6C4D", "#A8D08D")) +
-  theme_bw() +
-  xlab('Density') +
-  ylab('Trend in LSWT (°C/year)') +
-  labs(color = 'Temporal aggregation') +
-  theme(axis.text.x = element_text(angle = 55, hjust = 1))
-
-time_density <- ggarrange(a, b, common.legend = TRUE, labels = 'auto', nrow = 2)
-time_density
-ggsave('./figures/landsat_7/lit_review_season_density.png', time_density, 
-       dpi = 300, units = 'mm', height = 490, width = 730, scale = 0.27)
-
 
 # number of studies that have more than one season
 multiple_seasons <- gps %>% 
@@ -117,11 +105,12 @@ multiple_seasons$season_list <- factor(multiple_seasons$season_list,
                                                   "winter"))
 
 
-my_colors <- brewer.pal(10, "Set1")
+my_colors <- colorRampPalette(brewer.pal(9, "Set1"))(10)
 
 ggplot(multiple_seasons, aes(x = n_seasons, fill = season_list)) +
   geom_bar(position = 'dodge') +
   theme_bw() +
+  scale_fill_manual(values = my_colors) +
   geom_text(
     stat = "count",
     aes(label = after_stat(count)),
