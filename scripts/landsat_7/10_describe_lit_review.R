@@ -13,6 +13,8 @@ library(ggpubr)
 
 gps <- read.csv('./data/LSWT_rates_of_change_literature.csv',
                 fileEncoding = 'latin1')
+gps <- gps %>% 
+  rename(rate_C_year = ï..rate_C_year)
 
 gps$rate_C_year <- as.numeric(gps$rate_C_year)
 
@@ -119,7 +121,3 @@ screened_format <- screened_format %>%
 
 screened_clean <- screened_format %>% 
   distinct(year, authors, title, .keep_all = TRUE)
-
-# the number of studies which remained after screening
-sum(dups$citation %in% screened_clean$citation)
-# so 17 of the studies from my original list were kept
