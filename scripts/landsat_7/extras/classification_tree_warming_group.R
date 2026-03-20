@@ -90,24 +90,6 @@ drivers <- season_patterns %>%
 drivers <- na.omit(drivers)
 drivers$group <- as.factor(drivers$group)
 
-# Fit a linear model with all predictors (response can be numeric placeholder)
-lm_model <- lm(as.numeric(group) ~ dist_to_shore +
-                 NewAreaHa + MaxDepth + Fetch + LakeVolume + LakeElev +
-                 Lat + Long + Abell_Secc + SumWind + catAnnTemp,
-               data = drivers)
-
-vif_values <- vif(lm_model)
-print(vif_values)
-
-# remove variables with VIF > 10 and re run
-lm_model <- lm(as.numeric(group) ~ dist_to_shore +
-                 NewAreaHa + MaxDepth + LakeElev +
-                 Lat + Abell_Secc + SumWind,
-               data = drivers)
-
-vif_values <- vif(lm_model)
-print(vif_values)
-
 # fit classification tree with reduced group of drivers
 set.seed(123)
 tree_pattern <- rpart(group ~ dist_to_shore +
@@ -196,10 +178,11 @@ c <- ggplot(drivers, aes(x = group, y = log(MaxDepth), fill = group)) +
   stat_compare_means(method = "kruskal.test") +
   theme(axis.text.x = element_blank(),
         legend.position = 'none')
+c
 ggsave('./figures/landsat_7/driver_boxplots/boxplot_depth.png', c,
        dpi = 300, units = 'mm', height = 250, width = 275, scale = 0.25)
 
-d <- ggplot(drivers, aes(x = group, y = min_atemp_spring, fill = group)) +
+d <- ggplot(drivers, aes(x = group, y = max_atemp_winter, fill = group)) +
   geom_boxplot() +
   geom_jitter(alpha = 0.2) +
   scale_fill_manual(values = c('#D3D3D3', 'steelblue', 'firebrick')) +
@@ -208,6 +191,7 @@ d <- ggplot(drivers, aes(x = group, y = min_atemp_spring, fill = group)) +
   stat_compare_means(method = "kruskal.test") +
   theme(axis.text.x = element_blank(),
         legend.position = 'none')
+d
 ggsave('./figures/landsat_7/driver_boxplots/boxplot_spring_atemp.png', d,
        dpi = 300, units = 'mm', height = 250, width = 275, scale = 0.25)
 
@@ -220,6 +204,7 @@ e <- ggplot(drivers, aes(x = group, y = max_atemp_winter, fill = group)) +
   stat_compare_means(method = "kruskal.test") +
   theme(axis.text.x = element_blank(),
         legend.position = 'none')
+e
 ggsave('./figures/landsat_7/driver_boxplots/boxplot_winter_atemp.png', e,
        dpi = 300, units = 'mm', height = 250, width = 275, scale = 0.25)
 
@@ -232,6 +217,7 @@ f <- ggplot(drivers, aes(x = group, y = sen_rain_annual, fill = group)) +
   stat_compare_means(method = "kruskal.test") +
   theme(axis.text.x = element_blank(),
         legend.position = 'none')
+f
 ggsave('./figures/landsat_7/driver_boxplots/boxplot_rain_trend.png', f,
        dpi = 300, units = 'mm', height = 250, width = 275, scale = 0.25)
 
