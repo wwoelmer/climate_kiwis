@@ -185,8 +185,6 @@ wtemp_hist <- ggMarginal(wtemp,
            color = "black")
 wtemp_hist
 
-ggsave('./figures/landsat_7/map_LSWT.png', wtemp_hist,
-       dpi = 300, units = 'mm', height = 400, width = 350, scale = 0.4)
 
 # discrete slope categories
 df_wtemp <- df_wtemp %>% 
@@ -235,8 +233,6 @@ map_cat_hist <- ggMarginal(map_categ,
            fill = "gray", 
            color = "black")
 map_cat_hist
-ggsave('./figures/landsat_7/map_categories_LSWT.png', map_cat_hist,
-       dpi = 300, units = 'mm', height = 400, width = 350, scale = 0.4)
 
 a <- ggplot(df_wtemp, aes(x = sen_slope)) +
   geom_density(size = 2, fill = 'black', alpha = 0.7) +
@@ -247,36 +243,10 @@ a <- ggplot(df_wtemp, aes(x = sen_slope)) +
   theme(text = element_text(size = 16))
         
 a
-ggsave('./figures/landsat_7/density_all_lakes.png', a,
-       dpi = 300, units = 'mm', height = 400, width = 300, scale = 0.4)
+
 
 ##############################################################################
 
 maps <- ggarrange(rain, atemp, wind, wtemp, labels = 'auto')
 maps
-
-ggsave('./figures/landsat_7/maps_climate_vars_LSWT.png', maps,
-       dpi = 300, units = 'mm', height = 500, width = 575, scale = 0.45)
-
-
-
-quantile_breaks <- quantile(df_wtemp$area, probs = seq(0, 1, length.out = 7), na.rm = TRUE)
-
-df_wtemp %>% 
-  mutate(size_category = cut(area, 
-                             breaks = quantile_breaks, 
-                             labels = c("VV small", "Very Small", "Small", "Medium", "Large", "Very Large"),
-                             include.lowest = TRUE)) %>% 
-  ggplot(aes(x = area, y = sen_slope)) +
-  geom_point() +
-  facet_wrap(~size_category, scales = 'free_x')
-
-df_wtemp %>% 
-  mutate(size_category = cut(area, 
-                             breaks = quantile_breaks, 
-                             labels = c("VV small", "Very Small", "Small", "Medium", "Large", "Very Large"),
-                             include.lowest = TRUE)) %>% 
-  ggplot(aes(x = log(area), y = log(sen_slope))) +
-  geom_point() +
-  facet_wrap(~size_category, scales = 'free_x')
 
