@@ -1,3 +1,9 @@
+library(trend)
+library(tidyverse)
+
+sen <- read.csv('./data/output/LSWT_trends_by_season_annual.csv')
+sen <- sen %>% 
+  mutate(season_trend_qual = ifelse(sen_slope > 0, 'warm', 'cool'))
 
 season_groups <- sen %>% 
   select(-sen_slope, -sen_signif) %>% 
@@ -7,7 +13,8 @@ season_groups <- sen %>%
 
 group_summary <- season_groups %>% 
   group_by(pattern) %>% 
-  summarise(count = n())
+  summarise(count = n(),
+            pct = round(count/312*100), 3)
 
 season_df <- season_groups %>% 
   pivot_longer(autumn:winter, names_to = 'season', values_to = 'trend_qual') %>% 
@@ -38,7 +45,8 @@ group_df <- group_df %>%
 
 # add n as a label
 group_df <- group_df %>% 
-  mutate(label = paste0('n = ', count))
+  mutate(label = paste0('n = ', count,
+                        '\n (', pct, '%)'))
 
 labels_named <- setNames(group_df$label, group_df$pattern)
 labels_named <- labels_named[!duplicated(names(labels_named))]  # keep unique
@@ -168,6 +176,13 @@ ggsave('./figures/landsat_7/equal_warm_cool.png', split,
        dpi = 300, units = 'mm', height = 250, width = 710, scale = 0.35)
 
 
+# ggarrange and patchwork below are a bit weird, so aligning these plots in ppt
 ggarrange(m_warm, split, m_cool, common.legend = TRUE, labels = 'auto', ncol = 1,
           legend = 'right')
 
+
+library(patchwork)
+m_cool <- m_cool + ylab(NULL)
+(m_warm / split / m_cool) + 
+  plot_layout(ncol = 1, heights = c(1,1,1), guides = "collect") &
+  theme(plot.margin = margin(5,5,5,5)) 
