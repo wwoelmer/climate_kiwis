@@ -3,6 +3,7 @@ library(tidyverse)
 library(Hmisc)
 library(corrplot)
 library(psych)
+library(reshape2)
 
 met <- read.csv('./data/output/era5_met_summary_stats_trends.csv')
 met$LID <- as.character(met$LID)
@@ -47,7 +48,7 @@ fenz <- read.csv('./data/drivers/FENZ_Lake_Update_2024_25.09.2024.csv')
 fenz$LID <- as.character(fenz$LID)
 fenz <- fenz %>% 
   select(LID, Name, NewAreaHa, MaxDepth, Fetch, 
-         LakeVolume, LakeElev, Lat, Long,  Abell_Secc)
+         LakeVolume, LakeElev, Abell_Secc)
 
 
 # and get dist_to_shore
@@ -76,10 +77,18 @@ data_cor <- data_wide %>%
 response <- data_cor %>% 
   select(sen_lswt_annual:sen_lswt_winter)
 predictor <- data_cor %>% 
-  select(mean_rain_annual:dist_to_shore) 
+  select(mean_rain_annual:dist_to_shore) %>% 
+  select(-NewAreaHa, -LakeVolume) %>% # remove these because no significant correlations
+  select(-c(mean_rain_autumn, # keep only annual rain since all seasons show similar pattern
+            mean_rain_spring, 
+            mean_rain_summer, 
+            mean_rain_winter)) %>% 
+  select(-c(mean_atemp_autumn, # keep only annual rain since all seasons show similar pattern
+            mean_atemp_spring, 
+            mean_atemp_summer, 
+            mean_atemp_winter)) # keep only annual air temp since all seasons show similar pattern
 
-
-ct <- corr.test(response, predictor, use = 'pairwise')
+ct <- corr.test(response, predictor, use = 'pairwise', method = 'spearman')
 cor_matrix <- ct$r 
 p_mat <- ct$p
 
@@ -87,9 +96,112 @@ p_mat <- ct$p
 cor_matrix_sig <- cor_matrix
 cor_matrix_sig[p_mat > 0.05] <- NA
 
-corrplot(cor_matrix_sig, method = "color", 
-         col = colorRampPalette(c("blue", "white", "red"))(200), 
-         tl.col = "black", is.corr = FALSE)
+corrplot(cor_mat_masked, method = "color", 
+         col = colorRampPalette(c("blue", "white", "red"))(200),
+         tl.col = "black", is.corr = FALSE, na.label = " ",
+         addCoef.col = 'black', number.cex = 0.5,
+         tl.srt = 45,
+         tl.pos = 'lt')
+
+cor_mat_masked <- ifelse(abs(cor_matrix_sig) > 0.15, cor_matrix_sig, NA)
+cor_mat_masked
+
+cor_long <- melt(cor_mat_masked, varnames = c("Var1", "Var2"), value.name = "Correlation")
+cor_long <- na.omit(cor_long)
+
+# do some cleaning up of variable names
+cor_long$Var1 <- factor(cor_long$Var1, 
+                        levels = c('sen_lswt_annual',
+                                   'sen_lswt_autumn',
+                                   'sen_lswt_winter',
+                                   'sen_lswt_spring',
+                                   'sen_lswt_summer'),
+                        labels = c("Trend Annual",
+                                   "Trend Autumn",
+                                   "Trend Winter",
+                                   "Trend Spring",
+                                   "Trend Summer"))
+
+cor_long$Var2 <- factor(cor_long$Var2, 
+                        levels = c("mean_rain_annual",
+                                   "mean_atemp_annual",
+                                   "min_atemp_annual",
+                                   "min_atemp_autumn",
+                                   "min_atemp_spring",
+                                   "min_atemp_summer",
+                                   "min_atemp_winter",
+                                   "max_rain_annual",
+                                   "max_rain_autumn",
+                                   "max_rain_spring",
+                                   "max_rain_summer",
+                                   "max_rain_winter",
+                                   "max_atemp_annual",
+                                   "max_atemp_autumn",
+                                   "max_atemp_spring",
+                                   "max_atemp_summer",
+                                   "max_atemp_winter",
+                                   "sen_rain_annual",
+                                   "sen_rain_autumn",
+                                   "sen_rain_spring",
+                                   "sen_rain_summer",
+                                   "sen_rain_winter",
+                                   "sen_atemp_annual",
+                                   "sen_atemp_autumn",
+                                   "sen_atemp_spring",
+                                   "sen_atemp_summer",
+                                   "sen_atemp_winter",
+                                   "MaxDepth",
+                                   "Fetch",
+                                   "LakeElev",
+                                   "Abell_Secc",
+                                   "dist_to_shore"),
+                        labels = c("Mean annual rain",
+                                   "Mean annual atemp",
+                                   "Min annual atemp",
+                                   "Min autumn atemp",
+                                   "Min spring atemp",
+                                   "Min summer atemp",
+                                   "Min winter atemp",
+                                   "Max annual rain",
+                                   "Max autumn rain",
+                                   "Max spring rain",
+                                   "Max summer rain",
+                                   "Max winter rain",
+                                   "Max annual atemp",
+                                   "Max autumn atemp",
+                                   "Max spring atemp",
+                                   "Max summer atemp",
+                                   "Max winter atemp",
+                                   "Trend annual rain",
+                                   "Trend autumn rain",
+                                   "Trend spring rain",
+                                   "Trend summer rain",
+                                   "Trend winter rain",
+                                   "Trend annual atemp",
+                                   "Trend autumn atemp",
+                                   "Trend spring atemp",
+                                   "Trend summer atemp",
+                                   "Trend winter atemp",
+                                   "Max Depth",
+                                   "Fetch",
+                                   "Elevation",
+                                   "Secchi depth",
+                                   "Distance to shore"))
+
+p1 <- ggplot(cor_long, aes(Var1, Var2, fill = Correlation)) +
+  geom_tile(color = "grey90") +
+  geom_text(aes(label = round(Correlation, 2)), size = 3, na.rm = TRUE) +
+  scale_fill_gradient2(low = "blue", mid = "white", high = "red",
+                       midpoint = 0, na.value = "white") +
+  coord_fixed() +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        panel.grid = element_blank(),
+        axis.title = element_blank())
+p1
+ggsave('./figures/landsat_7/correlation_annual_seasonal_trends.png', p1,
+       dpi = 300, units = 'mm', height = 500, width = 300, scale = 0.35)
+
 
 # categorize LSWT trends into cooling or warming
 data <- data %>% 
