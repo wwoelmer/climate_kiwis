@@ -13,7 +13,7 @@ set.seed(142)
 
 # organize driver data
 # read in FENZ drivers and keep the relevant ones
-fenz <- read.csv('./data/drivers/FENZ_Lake_Update_2024_25.09.2024.csv')
+fenz <- read.csv('./data/FENZ_Lake_Update_2024_25.09.2024.csv')
 fenz$LID <- as.character(fenz$LID)
 fenz <- fenz %>% 
   select(LID, Name, NewAreaHa, Region, MaxDepth:SumWind, # Geomorphic
