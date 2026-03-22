@@ -103,4 +103,35 @@ for(i in 1:nrow(df)){
 
 write.csv(out, './data/output/era5_met_summary_stats_trends.csv', row.names = FALSE)
 
+######################################################
+# create wide version
+
+out$LID <- as.character(out$LID)
+
+ggplot(out, aes(y = mean_season, x = season)) +
+  geom_boxplot() +
+  facet_wrap(~variable, scales = 'free')
+
+# read in LSWT data
+lswt <- read.csv('./data/output/LSWT_trends_by_season_annual.csv') %>% 
+  select(-sen_signif)
+lswt$LID <- as.character(lswt$LID)
+
+met_data <- left_join(lswt, out)
+met_data <- na.omit(met_data)
+
+# convert to wide for correlation analysis
+data_wide <- met_data %>% 
+  mutate(variable = dplyr::recode(variable,
+                                  "MET_pprain" = "rain",
+                                  "MET_tmpair" = 'atemp')) %>% 
+  rename(sen_lswt = sen_slope,
+         mean = mean_season,
+         min = min_season,
+         max= max_season,
+         sen = sen_season) %>%
+  pivot_wider(names_from = variable, values_from = c(mean, min, max, sen)) %>% 
+  pivot_wider(names_from = season, values_from = sen_lswt:sen_atemp)
+
+write.csv(data_wide, './data/output/era5_met_summary_stats_trends_WIDE.csv', row.names = FALSE)
 
