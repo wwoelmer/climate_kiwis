@@ -301,8 +301,12 @@ c <- shap_long %>%
   facet_wrap(~variable, scales = 'free') +
   scale_fill_manual(values = c('#D3D3D3', 'steelblue', 'firebrick')) +
   geom_boxplot() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  theme_bw()
+  ylab("SHAP value") +
+  xlab('Variable') +
+  labs(fill = 'Group') +
+  theme_bw() +
+  theme(axis.text.x = element_blank()) 
+  
 c
 
 # add back the original values of the drivers
@@ -326,7 +330,7 @@ b <- shap_df2 %>%
   geom_smooth(method = "gam", se = FALSE) +
   facet_wrap(~variable, 
              scales = "free") +
-  theme_minimal() +
+  theme_bw() +
   xlab("Feature value") +
   ylab("SHAP value") +
   scale_color_manual(values = c("Equal warming and cooling" = "gray",
