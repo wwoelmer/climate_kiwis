@@ -69,6 +69,26 @@ a
 ggsave('./figures/landsat_7/timeframe_duration_lit_review.png', a, 
        dpi = 300, units = 'mm', height = 300, width = 700, scale = 0.3)
 
+# calculate number of times each start year occurs for each temporal aggreg.
+ggplot(gps_day, aes(x = temporal_aggregation, y = n_years)) +
+  geom_col()
+
+median_years <- gps_day %>% 
+  filter(temporal_aggregation %in% c('annual', 'spring', 'summer', 'autumn', 'winter')) %>% 
+  group_by(temporal_aggregation) %>% 
+  summarise(median_duration = median(n_years))
+
+
+years <- gps_day %>% 
+  filter(temporal_aggregation %in% c('annual', 'spring', 'summer', 'autumn', 'winter')) %>% 
+  group_by(temporal_aggregation, min_year) %>% 
+  summarise(n = n())
+
+ggplot(years, aes(x = min_year, y = n)) +
+  geom_col() +
+  facet_wrap(~temporal_aggregation, ncol = 1)
+ 
+
 # mean rates by season
 mean_season <- gps_day %>% 
   group_by(temporal_aggregation) %>% 
