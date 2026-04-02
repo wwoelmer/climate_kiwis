@@ -48,15 +48,17 @@ gps_day$facet_label <- factor(gps_day$facet_label,
 
 a <- gps_day %>% 
   filter(temporal_aggregation %in% c('annual', 'spring', 'summer', 'autumn', 'winter')) %>% 
-  mutate(violin_x = max(max_year, na.rm = TRUE) + 2) %>% 
+  mutate(temporal_aggregation = factor(temporal_aggregation,
+                                       levels = c('spring','summer','autumn','winter','annual')),
+         violin_x = max(max_year, na.rm = TRUE) + 2) %>% 
   ggplot() + 
   geom_point(aes(x = min_year, y = rate_C_year, alpha = 0.01, color = temporal_aggregation)) +
   geom_point(aes(x = max_year, y = rate_C_year, alpha = 0.01, color = temporal_aggregation)) +
   geom_segment(aes(x = min_year, xend = max_year, y = rate_C_year, yend = rate_C_year,
                    color = temporal_aggregation), size = 0.7) +
   facet_wrap(~facet_label, ncol = 5) +
-  scale_color_manual(values = c("#A8D08D", "#EE6C4D", "#FFB84D", "#96C0B7", "#454545")) +
-  scale_fill_manual(values = c("#A8D08D", "#EE6C4D", "#FFB84D", "#96C0B7", "#454545")) +
+  scale_color_manual(values = c("#A8D08D", "#EE6C4D", "#FFB84D","#96C0B7", "#454545")) +
+  scale_fill_manual(values = c( "#A8D08D", "#EE6C4D", "#FFB84D", "#96C0B7", "#454545")) +
   theme_bw() +
   geom_hline(yintercept = 0) +
   xlab('Duration of study') +
