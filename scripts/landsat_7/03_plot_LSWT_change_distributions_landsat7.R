@@ -115,6 +115,9 @@ mean_island <- sen %>%
                         "\nmean = ", round(mean_sen, 3)))
 mean_island
 
+## t-test between islands
+t.test(sen_slope ~ island, data = sen)
+
 island_cool_warm <- sen %>% 
   group_by(island) %>% 
   summarise(pct_cool = sum(sen_slope < 0)/n(),
