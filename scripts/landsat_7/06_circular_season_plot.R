@@ -1,15 +1,42 @@
 library(trend)
 library(tidyverse)
+library(ggridges)
 
 sen <- read.csv('./data/output/LSWT_trends_by_season_annual.csv')
 sen <- sen %>% 
-  mutate(season_trend_qual = ifelse(sen_slope > 0, 'warm', 'cool'))
+  group_by(LID) %>%
+  mutate(annual_sen = sen_slope[season == "annual"][1]) %>%
+  mutate(season_trend_qual = ifelse(sen_slope > 0, 'warm', 'cool')) %>% 
+  filter(season!='annual') %>% 
+  group_by(LID) %>% 
+  mutate(season_range = max(sen_slope) - min(sen_slope),
+         season_sd = sd(sen_slope),
+         season_cv = season_sd/mean(sen_slope),
+         median_trend = median(sen_slope))
 
 season_groups <- sen %>% 
   select(-sen_slope, -sen_signif) %>% 
   pivot_wider(names_from = season,
               values_from = season_trend_qual) %>% 
   unite("pattern", spring, summer, autumn, winter, sep = "_", remove = FALSE)
+
+season_groups <- season_groups %>% 
+  mutate(group = case_when(pattern %in% c('warm_warm_warm_warm',
+                                          'warm_warm_warm_cool',
+                                          'warm_warm_cool_warm',
+                                          'warm_cool_warm_warm',
+                                          'cool_warm_warm_warm') ~ 'Majority warming',
+                           pattern %in% c('cool_cool_cool_cool',
+                                          'cool_cool_cool_warm',
+                                          'cool_cool_warm_cool',
+                                          'cool_warm_cool_cool',
+                                          'warm_cool_cool_cool') ~ 'Majority cooling',
+                           pattern %in% c('cool_cool_warm_warm',
+                                          'warm_warm_cool_cool',
+                                          'warm_cool_warm_cool',
+                                          'cool_warm_cool_warm',
+                                          'warm_cool_cool_warm',
+                                          'cool_warm_warm_cool') ~ 'Equal warming and cooling'))
 
 group_summary <- season_groups %>% 
   group_by(pattern) %>% 
@@ -86,6 +113,81 @@ group_df <- group_df %>%
                                           'cool_warm_cool_warm',
                                           'warm_cool_cool_warm',
                                           'cool_warm_warm_cool') ~ 'Equal warming and cooling'))
+
+range <- ggplot(season_groups, aes(x = season_range, y = reorder(group, season_range, FUN = mean), 
+                     fill = group)) +
+  geom_density_ridges() +
+  scale_fill_manual(values = c("lightgrey", "steelblue", "firebrick")) +
+  theme_bw() +
+  ylab(NULL) +
+  xlab('Range across seasons')
+
+median <- ggplot(season_groups, aes(x = median_trend, y = reorder(group, median_trend, FUN = mean), 
+                     fill = group)) +
+  geom_density_ridges() +
+  scale_fill_manual(values = c("lightgrey", "steelblue", "firebrick")) +
+  theme_bw() +
+  ylab(NULL) +
+  xlab('Median trend')
+
+sd <- ggplot(season_groups, aes(x = season_sd, y = reorder(group, season_sd, FUN = mean), 
+                                    fill = group)) +
+  geom_density_ridges() +
+  scale_fill_manual(values = c("lightgrey", "steelblue", "firebrick")) +
+  theme_bw() +
+  ylab(NULL) +
+  xlab('SD across seasons')
+
+range_v_median <- ggplot(season_groups, aes(x = median_trend, y = season_range, color = group)) +
+  geom_point() +
+  scale_color_manual(values = c("lightgrey", "steelblue", "firebrick")) +
+  geom_smooth(method = 'lm') +
+  theme_bw() +
+  xlab('Median trend') +
+  ylab('Range across seasons')
+
+range_v_median
+
+ggplot(season_groups, aes(x = median_trend, y = annual_sen, color = group)) +
+  geom_point() +
+  scale_color_manual(values = c("lightgrey", "steelblue", "firebrick")) +
+  geom_smooth(method = 'lm') +
+  theme_bw() 
+
+ggplot(season_groups, aes(x = annual_sen - median_trend, y = season_range, color = group)) +
+  geom_point() +
+  scale_color_manual(values = c("lightgrey", "steelblue", "firebrick")) +
+#  geom_smooth(method = 'lm') +
+  theme_bw() 
+
+library(ggpubr)
+ggarrange(median, range, range_v_median, common.legend = TRUE, labels = 'auto')
+
+
+ggplot(season_groups, aes(x = season_range, y = reorder(group, season_range, FUN = mean), 
+                                                   fill = group)) +
+  geom_boxplot() +
+  scale_fill_manual(values = c("lightgrey", "steelblue", "firebrick")) +
+  theme_bw() +
+  labs(fill = NULL) +
+  theme(legend.position = 'none')
+
+ggplot(season_groups, aes(x = season_sd, y = reorder(group, season_range, FUN = mean), 
+                     fill = group)) +
+  geom_boxplot() +
+  scale_fill_manual(values = c("lightgrey", "steelblue", "firebrick")) +
+  theme_bw() +
+  labs(fill = NULL) +
+  theme(legend.position = 'none')
+
+ggplot(season_groups, aes(x = log(season_cv), y = reorder(group, season_range, FUN = mean), 
+                     fill = group)) +
+  geom_boxplot() +
+  scale_fill_manual(values = c("lightgrey", "steelblue", "firebrick")) +
+  theme_bw() +
+  labs(fill = NULL) +
+  theme(legend.position = 'none')
+
 
 ggplot(group_df, aes(x = x, y = scaled_y, fill = trend_qual, group = pattern)) +
   geom_col(width = 1, color = "white") +
