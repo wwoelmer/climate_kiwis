@@ -65,7 +65,7 @@ group_df <- group_df %>%
 # set order of patterns based on count
 group_df <- group_df %>% 
   mutate(pattern = fct_reorder(pattern, count))
-  
+
 # and scale the y based on count
 group_df <- group_df %>% 
   mutate(scaled_y = y*count/max(count) + 0.5)
@@ -115,7 +115,7 @@ group_df <- group_df %>%
                                           'cool_warm_warm_cool') ~ 'Equal warming and cooling'))
 
 range <- ggplot(season_groups, aes(x = season_range, y = reorder(group, season_range, FUN = mean), 
-                     fill = group)) +
+                                   fill = group)) +
   geom_density_ridges() +
   scale_fill_manual(values = c("lightgrey", "steelblue", "firebrick")) +
   theme_bw() +
@@ -123,7 +123,7 @@ range <- ggplot(season_groups, aes(x = season_range, y = reorder(group, season_r
   xlab('Range across seasons')
 
 median <- ggplot(season_groups, aes(x = median_trend, y = reorder(group, median_trend, FUN = mean), 
-                     fill = group)) +
+                                    fill = group)) +
   geom_density_ridges() +
   scale_fill_manual(values = c("lightgrey", "steelblue", "firebrick")) +
   theme_bw() +
@@ -131,7 +131,7 @@ median <- ggplot(season_groups, aes(x = median_trend, y = reorder(group, median_
   xlab('Median trend')
 
 sd <- ggplot(season_groups, aes(x = season_sd, y = reorder(group, season_sd, FUN = mean), 
-                                    fill = group)) +
+                                fill = group)) +
   geom_density_ridges() +
   scale_fill_manual(values = c("lightgrey", "steelblue", "firebrick")) +
   theme_bw() +
@@ -157,7 +157,7 @@ ggplot(season_groups, aes(x = median_trend, y = annual_sen, color = group)) +
 ggplot(season_groups, aes(x = annual_sen - median_trend, y = season_range, color = group)) +
   geom_point() +
   scale_color_manual(values = c("lightgrey", "steelblue", "firebrick")) +
-#  geom_smooth(method = 'lm') +
+  #  geom_smooth(method = 'lm') +
   theme_bw() 
 
 library(ggpubr)
@@ -165,7 +165,7 @@ ggarrange(median, range, range_v_median, common.legend = TRUE, labels = 'auto')
 
 
 ggplot(season_groups, aes(x = season_range, y = reorder(group, season_range, FUN = mean), 
-                                                   fill = group)) +
+                          fill = group)) +
   geom_boxplot() +
   scale_fill_manual(values = c("lightgrey", "steelblue", "firebrick")) +
   theme_bw() +
@@ -173,7 +173,7 @@ ggplot(season_groups, aes(x = season_range, y = reorder(group, season_range, FUN
   theme(legend.position = 'none')
 
 ggplot(season_groups, aes(x = season_sd, y = reorder(group, season_range, FUN = mean), 
-                     fill = group)) +
+                          fill = group)) +
   geom_boxplot() +
   scale_fill_manual(values = c("lightgrey", "steelblue", "firebrick")) +
   theme_bw() +
@@ -181,7 +181,7 @@ ggplot(season_groups, aes(x = season_sd, y = reorder(group, season_range, FUN = 
   theme(legend.position = 'none')
 
 ggplot(season_groups, aes(x = log(season_cv), y = reorder(group, season_range, FUN = mean), 
-                     fill = group)) +
+                          fill = group)) +
   geom_boxplot() +
   scale_fill_manual(values = c("lightgrey", "steelblue", "firebrick")) +
   theme_bw() +
@@ -192,7 +192,7 @@ ggplot(season_groups, aes(x = log(season_cv), y = reorder(group, season_range, F
 ggplot(group_df, aes(x = x, y = scaled_y, fill = trend_qual, group = pattern)) +
   geom_col(width = 1, color = "white") +
   scale_fill_manual(values = c("warm" = "firebrick", "cool" = "steelblue")) +
-#  geom_text(aes(label = count), position = position_stack(vjust = 0.5), size = 3, color = "white") +
+  #  geom_text(aes(label = count), position = position_stack(vjust = 0.5), size = 3, color = "white") +
   coord_polar() +
   facet_wrap(~pattern, labeller = labeller(pattern = labels_named)) +
   theme_void() +
