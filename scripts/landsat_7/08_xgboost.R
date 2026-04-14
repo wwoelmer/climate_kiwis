@@ -57,7 +57,7 @@ season_groups <- data %>%
   select(-sen_slope, -sen_signif) %>% 
   pivot_wider(names_from = season,
               values_from = season_trend_qual) %>% 
-  unite("pattern", spring, summer, autumn, winter, sep = "_", remove = FALSE)
+  unite("pattern", Spring, Summer, Autumn, Winter, sep = "_", remove = FALSE)
 
 # categorize patterns 
 season_patterns <- season_groups %>% 
@@ -76,7 +76,7 @@ season_patterns <- season_groups %>%
                                           'warm_cool_warm_cool',
                                           'cool_warm_cool_warm',
                                           'warm_cool_cool_warm',
-                                          'cool_warm_warm_cool') ~ 'Equal warming and cooling'))
+                                          'cool_warm_warm_cool') ~ 'Equivocal warming and cooling'))
 
 #############################################################################
 #  driver analysis using regression tree to predict each lake's pattern
@@ -279,7 +279,7 @@ shap_long <- shap_long %>%
 # rename the categories to the actual group names
 shap_long <- shap_long %>% 
   mutate(group = dplyr::recode(group,
-                           "1" = 'Equal warming and cooling',
+                           "1" = 'Equivocal warming and cooling',
                            '2' = 'Majority cooling',
                            '3' = 'Majority warming')) %>% 
   rename(SHAP_value = value)
@@ -333,7 +333,7 @@ b <- shap_df2 %>%
   theme_bw() +
   xlab("Feature value") +
   ylab("SHAP value") +
-  scale_color_manual(values = c("Equal warming and cooling" = "gray",
+  scale_color_manual(values = c("Equivocal warming and cooling" = "gray",
                                 "Majority cooling" = "steelblue",
                                 "Majority warming" = "firebrick")) +
   theme(legend.position = 'bottom')
@@ -409,7 +409,7 @@ p_low_vol <- shap_df2 %>%
   xlab("Feature value") +
   ylab("SHAP value") +
   ggtitle('Lake volume < 10,000,000') +
-  scale_color_manual(values = c("Equal warming and cooling" = "gray",
+  scale_color_manual(values = c("Equivocal warming and cooling" = "gray",
                                 "Majority cooling" = "steelblue",
                                 "Majority warming" = "firebrick"))
 p_low_vol
