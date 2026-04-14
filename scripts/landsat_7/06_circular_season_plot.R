@@ -5,9 +5,9 @@ library(ggridges)
 sen <- read.csv('./data/output/LSWT_trends_by_season_annual.csv')
 sen <- sen %>% 
   group_by(LID) %>%
-  mutate(annual_sen = sen_slope[season == "annual"][1]) %>%
+  mutate(annual_sen = sen_slope[season == "Annual"][1]) %>%
   mutate(season_trend_qual = ifelse(sen_slope > 0, 'warm', 'cool')) %>% 
-  filter(season!='annual') %>% 
+  filter(season!='Annual') %>% 
   group_by(LID) %>% 
   mutate(season_range = max(sen_slope) - min(sen_slope),
          season_sd = sd(sen_slope),
@@ -18,7 +18,7 @@ season_groups <- sen %>%
   select(-sen_slope, -sen_signif) %>% 
   pivot_wider(names_from = season,
               values_from = season_trend_qual) %>% 
-  unite("pattern", spring, summer, autumn, winter, sep = "_", remove = FALSE)
+  unite("pattern", Spring, Summer, Autumn, Winter, sep = "_", remove = FALSE)
 
 season_groups <- season_groups %>% 
   mutate(group = case_when(pattern %in% c('warm_warm_warm_warm',
@@ -36,7 +36,7 @@ season_groups <- season_groups %>%
                                           'warm_cool_warm_cool',
                                           'cool_warm_cool_warm',
                                           'warm_cool_cool_warm',
-                                          'cool_warm_warm_cool') ~ 'Equal warming and cooling'))
+                                          'cool_warm_warm_cool') ~ 'Equivocal warming and cooling'))
 
 group_summary <- season_groups %>% 
   group_by(pattern) %>% 
@@ -44,7 +44,7 @@ group_summary <- season_groups %>%
             pct = round(count/312*100), 3)
 
 season_df <- season_groups %>% 
-  pivot_longer(autumn:winter, names_to = 'season', values_to = 'trend_qual') %>% 
+  pivot_longer(Autumn:Winter, names_to = 'season', values_to = 'trend_qual') %>% 
   ungroup() %>% 
   distinct(pattern, season, .keep_all = TRUE) %>% 
   ungroup() %>% 
@@ -54,10 +54,10 @@ group_df <- left_join(group_summary, season_df)
 
 # add some plotting details
 group_df <- group_df %>% 
-  mutate(angle_id = case_when(season=='spring' ~ 1,
-                              season=='summer' ~ 2,
-                              season=='autumn' ~ 3,
-                              season=='winter' ~ 4,
+  mutate(angle_id = case_when(season=='Spring' ~ 1,
+                              season=='Summer' ~ 2,
+                              season=='Autumn' ~ 3,
+                              season=='Winter' ~ 4,
                               TRUE ~ NA_real_),
          x = angle_id,
          y = 1)
@@ -112,7 +112,7 @@ group_df <- group_df %>%
                                           'warm_cool_warm_cool',
                                           'cool_warm_cool_warm',
                                           'warm_cool_cool_warm',
-                                          'cool_warm_warm_cool') ~ 'Equal warming and cooling'))
+                                          'cool_warm_warm_cool') ~ 'Equivocal warming and cooling'))
 
 range <- ggplot(season_groups, aes(x = season_range, y = reorder(group, season_range, FUN = mean), 
                                    fill = group)) +
@@ -199,6 +199,8 @@ ggplot(group_df, aes(x = x, y = scaled_y, fill = trend_qual, group = pattern)) +
   theme(strip.text = element_text(size = 10)) +
   labs(fill = "Trend")
 
+group_df$trend_qual <- factor(group_df$trend_qual, levels = c('cool', 'warm'),
+                              labels = c('Cool', 'Warm'))
 
 # separate into majority warming, cooling, and split
 m_warm <- group_df %>% 
@@ -209,7 +211,7 @@ m_warm <- group_df %>%
                         'cool_warm_warm_warm')) %>% 
   ggplot(aes(x = x, y = scaled_y, fill = trend_qual, group = pattern)) +
   geom_col(width = 1, color = "white") +
-  scale_fill_manual(values = c("warm" = "firebrick", "cool" = "steelblue")) +
+  scale_fill_manual(values = c("Warm" = "firebrick", "Cool" = "steelblue")) +
   #  geom_text(aes(label = count), position = position_stack(vjust = 0.5), size = 3, color = "white") +
   coord_polar() +
   facet_wrap(~pattern, labeller = labeller(pattern = labels_named), nrow = 1) +
@@ -232,7 +234,7 @@ m_cool <- group_df %>%
                                                 'cool_cool_cool_warm')))) %>% 
   ggplot(aes(x = x, y = scaled_y, fill = trend_qual, group = pattern)) +
   geom_col(width = 1, color = "white") +
-  scale_fill_manual(values = c("warm" = "firebrick", "cool" = "steelblue")) +
+  scale_fill_manual(values = c("Warm" = "firebrick", "Cool" = "steelblue")) +
   #  geom_text(aes(label = count), position = position_stack(vjust = 0.5), size = 3, color = "white") +
   coord_polar() +
   facet_wrap(~pattern, labeller = labeller(pattern = labels_named), nrow = 1) +
@@ -258,7 +260,7 @@ split <- group_df %>%
                                               'cool_warm_cool_warm'))) %>% 
   ggplot(aes(x = x, y = scaled_y, fill = trend_qual, group = pattern)) +
   geom_col(width = 1, color = "white") +
-  scale_fill_manual(values = c("warm" = "firebrick", "cool" = "steelblue")) +
+  scale_fill_manual(values = c("Warm" = "firebrick", "Cool" = "steelblue")) +
   #  geom_text(aes(label = count), position = position_stack(vjust = 0.5), size = 3, color = "white") +
   coord_polar() +
   facet_wrap(~pattern, labeller = labeller(pattern = labels_named), nrow = 1) +
@@ -266,7 +268,7 @@ split <- group_df %>%
   theme(strip.text = element_text(size = 10),
         plot.margin = margin(0, 1, 0, 1)) +
   labs(fill = "Trend") +
-  ggtitle('Equal warming and cooling (n = 114)')
+  ggtitle('Equivocal warming and cooling (n = 114)')
 split
 
 
