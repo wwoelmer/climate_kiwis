@@ -51,14 +51,14 @@ data <- data %>%
   filter(!is.na(district))
 
 # categorize dates into seasons
-seasons <- data.frame(season = c('spring', 'summer', 'autumn', 'winter'),
+seasons <- data.frame(season = c('Spring', 'Summer', 'Autumn', 'Winter'),
                       month_start = c('September', 'December', 'March', 'June'))
 
 data <- data %>% 
-  mutate(season = ifelse(month(Date) %in% c(12, 1, 2), 'summer', NA),
-         season = ifelse(month(Date) %in% c(3, 4, 5), 'autumn', season),
-         season = ifelse(month(Date) %in% c(6, 7, 8), 'winter', season),
-         season = ifelse(month(Date) %in% c(9, 10, 11), 'spring', season))
+  mutate(season = ifelse(month(Date) %in% c(12, 1, 2), 'Summer', NA),
+         season = ifelse(month(Date) %in% c(3, 4, 5), 'Autumn', season),
+         season = ifelse(month(Date) %in% c(6, 7, 8), 'Winter', season),
+         season = ifelse(month(Date) %in% c(9, 10, 11), 'Spring', season))
 
 # take annual mean by season
 data_sub <- data %>% 
@@ -79,14 +79,15 @@ sen %>%
   group_by(season) %>% 
   summarise(sen_slope = mean(sen_slope))
 
-sen$season <- factor(sen$season, levels = c('winter',
-                                            'autumn', 'summer',
-                                            'spring'))
+sen$season <- factor(sen$season, levels = c('Winter',
+                                            'Autumn', 
+                                            'Summer',
+                                            'Spring'))
 sen$LID <- as.numeric(sen$LID)
 
 # bring in annual rates and add to df
 sen_ann <- read.csv('./data/output/sen_slope_LSWT_annual_mean_30_districts_landsat7.csv')
-sen_ann$season <- 'annual'
+sen_ann$season <- 'Annual'
 sen_ann <- sen_ann %>% 
   select(LID, season, sen_slope, sen_signif)
 
@@ -97,7 +98,7 @@ sen <- full_join(sen, sen_ann)
 write.csv(sen, './data/output/LSWT_trends_by_season_annual.csv', row.names = FALSE)
 
 ### figure with lines for LID
-sen$season <- factor(sen$season, levels = c('spring', 'summer', 'autumn', 'winter', 'annual'))
+sen$season <- factor(sen$season, levels = c('Spring', 'Summer', 'Autumn', 'Winter', 'Annual'))
 
 lswt_season_lines <- ggplot(sen, aes(x = fct_rev(season), y = sen_slope, fill = season)) +
   geom_line(aes(x = season, y = sen_slope, color = as.numeric(LID),
@@ -107,7 +108,7 @@ lswt_season_lines <- ggplot(sen, aes(x = fct_rev(season), y = sen_slope, fill = 
   scale_color_gradient(low = "black", high = "lightgray") +
   scale_fill_manual(values = c("#A8D08D", "#EE6C4D", "#FFB84D", "#96C0B7", "#454545")) +
   geom_hline(yintercept = 0, size = 1) +
-  ylab('LSWT Trend (°C/year)') +
+  ylab('LSWT trend (°C/year)') +
   xlab('Season') +
   theme(legend.position = 'none',
         text = element_text(size = 14))
@@ -141,11 +142,11 @@ write.csv(summ, './data/output/LSWT_trend_summaries_by_season.csv', row.names = 
 
 # split seasonal and annual
 sen_seasonal <- sen %>%
-  filter(season != "annual") %>%
+  filter(season != "Annual") %>%
   select(LID, season, seasonal = sen_slope)
 
 sen_annual2 <- sen %>%
-  filter(season == "annual") %>%
+  filter(season == "Annual") %>%
   select(LID, annual = sen_slope)
 
 # join
@@ -165,10 +166,10 @@ p_a <- ggplot(sen_both, aes(x = seasonal, y = annual, color = season)) +
            color = 'black') +
   facet_wrap(~season, nrow = 1) +
   scale_color_manual(values = c(
-    spring = "#A8D08D",
-    summer = "#EE6C4D",
-    autumn = "#FFB84D",
-    winter = "#96C0B7"
+    Spring = "#A8D08D",
+    Summer = "#EE6C4D",
+    Autumn = "#FFB84D",
+    Winter = "#96C0B7"
   )) +
   theme_bw() +
   labs(x = "Seasonal trend (°C/year)",
@@ -181,10 +182,10 @@ p_a
 sen_quad <- sen_both %>%
   group_by(season) %>% 
   mutate(category = case_when(
-    seasonal > 0 & annual > 0 ~ "both warm",
-    seasonal < 0 & annual < 0 ~ "both cool",
-    seasonal < 0 & annual > 0 ~ "cool season, warm year",
-    seasonal > 0 & annual < 0 ~ "warm season, cool year"))
+    seasonal > 0 & annual > 0 ~ "Both warm",
+    seasonal < 0 & annual < 0 ~ "Both cool",
+    seasonal < 0 & annual > 0 ~ "Cool season, warm year",
+    seasonal > 0 & annual < 0 ~ "Warm season, cool year"))
 
 quad_sum <- sen_quad %>%
   group_by(season, category) %>%
@@ -195,19 +196,19 @@ quad_sum <- sen_quad %>%
 p_b <- ggplot(quad_sum, aes(x = season, y = percent, fill = season)) +
   geom_col() +
   facet_wrap(~factor(category,
-                     levels = c('cool season, warm year',
-                                'both warm',
-                                'warm season, cool year',
-                                'both cool')), nrow = 1) +
+                     levels = c('Cool season, warm year',
+                                'Both warm',
+                                'Warm season, cool year',
+                                'Both cool')), nrow = 1) +
   scale_fill_manual(values = c(
-    spring = "#A8D08D",
-    summer = "#EE6C4D",
-    autumn = "#FFB84D",
-    winter = "#96C0B7"
+    Spring = "#A8D08D",
+    Summer = "#EE6C4D",
+    Autumn = "#FFB84D",
+    Winter = "#96C0B7"
   )) +
   theme_bw() +
   labs(
-    x = "Season",
+    x = NULL,
     y = "Percent of lakes"
   ) +
   theme(
@@ -232,7 +233,8 @@ ggplot(quad_sum, aes(x = category, y = percent, fill = category)) +
 
 a <- lswt_season_lines
 b <- ggarrange(p_a, p_b, common.legend = TRUE, nrow = 2,
-               labels = c('b', 'c'))
+               labels = c('b', 'c'), legend = 'bottom')
+b
 season_plot <- ggarrange(a, b, nrow = 2, labels = c('a', '', ''))
 season_plot
 
