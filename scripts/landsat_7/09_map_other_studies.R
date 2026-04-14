@@ -67,7 +67,9 @@ p2 <- ggplot() +
   scale_size_continuous(breaks = c(10, 100, 500, 1000),
                         range  = c(1, 10)) +
   labs(shape = 'Spatial extent',
-       size = 'Number of lakes') +
+       size = 'Number of lakes',
+       y = 'Latitude',
+       x = 'Longitude') +
   guides(fill = 'none') +
   theme_bw() +
   theme(legend.position = "left") 
