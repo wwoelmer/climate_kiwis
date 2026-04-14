@@ -73,7 +73,7 @@ ggplot(data_sub, aes(x = mean_temp, y = district, fill = district)) +
 
 # calculate sen slope and p values
 sen <- data_sub %>% 
-  group_by(district, LID) %>% 
+  group_by(LID, district) %>% 
   summarise(sen_slope = sens.slope(mean_temp)$estimates,
             sen_signif = sens.slope(mean_temp)$p.value,
             median_temp = median(mean_temp),
