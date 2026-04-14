@@ -96,22 +96,22 @@ ggsave('./figures/landsat_7/map_LSWT.png', wtemp_hist,
 # discrete slope categories
 df_wtemp <- df_wtemp %>% 
   mutate(slope_cat = case_when(
-    sen_slope <= -0.1 ~ "Strong Cooling",
-    sen_slope > -0.1 & sen_slope < -0.01 ~ "Mild Cooling",
-    sen_slope >= -0.01 & sen_slope <= 0.01 ~ "No Change",
-    sen_slope > 0.01 & sen_slope < 0.1 ~ "Mild Warming",
-    sen_slope >= 0.1 ~ "Strong Warming"))
+    sen_slope <= -0.1 ~ "Strong cooling",
+    sen_slope > -0.1 & sen_slope < -0.01 ~ "Mild cooling",
+    sen_slope >= -0.01 & sen_slope <= 0.01 ~ "No change",
+    sen_slope > 0.01 & sen_slope < 0.1 ~ "Mild warming",
+    sen_slope >= 0.1 ~ "Strong warming"))
 
-df_wtemp$slope_cat <- factor(df_wtemp$slope_cat, levels = c('Strong Warming',
-                                                            'Mild Warming',
-                                                            'No Change',
-                                                            'Mild Cooling',
-                                                            'Strong Cooling'),
-                             labels = c('Strong Warming: >= 0.1',
-                                        'Mild Warming: 0.01 to 0.1',
-                                        'No Change: -0.01 to 0.01',
-                                        'Mild Cooling: -0.1 to -0.01',
-                                        'Strong Cooling: <= -0.1'))
+df_wtemp$slope_cat <- factor(df_wtemp$slope_cat, levels = c('Strong warming',
+                                                            'Mild warming',
+                                                            'No change',
+                                                            'Mild cooling',
+                                                            'Strong cooling'),
+                             labels = c('Strong warming: >= 0.1',
+                                        'Mild warming: 0.01 to 0.1',
+                                        'No change: -0.01 to 0.01',
+                                        'Mild cooling: -0.1 to -0.01',
+                                        'Strong cooling: <= -0.1'))
 
 map_categ <-  ggplot() +
   geom_sf(data = nz_shapefile, fill = '#4D4D4D', color = 'black') +
@@ -122,16 +122,16 @@ map_categ <-  ggplot() +
              aes(x = lon, y = lat, fill = fct_rev(slope_cat), group = slope_cat), 
              shape = 21, color = 'black', size = 2)  +
   theme_bw() +
-  scale_fill_manual(values = c('Strong Cooling: <= -0.1' = '#00316E',
-                               'Mild Cooling: -0.1 to -0.01' = "#8098B7",
-                               'No Change: -0.01 to 0.01' = 'white',
-                               'Mild Warming: 0.01 to 0.1' = "#F299A3",
-                               'Strong Warming: >= 0.1' = '#ca0020')) +
-  scale_color_manual(values = c('Strong Cooling: <= -0.1' = '#00316E',
-                                'Mild Cooling: -0.1 to -0.01' = "#8098B7",
-                                'No Change: -0.01 to 0.01' = 'white',
-                                'Mild Warming: 0.01 to 0.1' = "#F299A3",
-                                'Strong Warming: >= 0.1' = '#ca0020')) +
+  scale_fill_manual(values = c('Strong cooling: <= -0.1' = '#00316E',
+                               'Mild cooling: -0.1 to -0.01' = "#8098B7",
+                               'No change: -0.01 to 0.01' = 'white',
+                               'Mild warming: 0.01 to 0.1' = "#F299A3",
+                               'Strong warming: >= 0.1' = '#ca0020')) +
+  scale_color_manual(values = c('Strong cooling: <= -0.1' = '#00316E',
+                                'Mild cooling: -0.1 to -0.01' = "#8098B7",
+                                'No change: -0.01 to 0.01' = 'white',
+                                'Mild warming: 0.01 to 0.1' = "#F299A3",
+                                'Strong warming: >= 0.1' = '#ca0020')) +
   xlab('Longitude') +
   ylab('Latitude') +
   labs(fill = 'LSWT trend') +
@@ -139,9 +139,8 @@ map_categ <-  ggplot() +
          color = 'none') +
   theme(text = element_text(size = 12),
         legend.text = element_text(size = 10),
-        legend.position = "left", # or left
-        legend.direction = "vertical")
-        #legend.box = "vertical") 
+        legend.position = "bottom", # or left
+        legend.direction = "horizontal") 
 map_categ
 
 map_cat_hist <- ggMarginal(map_categ, 
@@ -154,6 +153,10 @@ map_cat_hist
 
 ggsave('./figures/landsat_7/map_categories_LSWT.png', map_cat_hist,
        dpi = 300, units = 'mm', height = 400, width = 400, scale = 0.4)
+
+ggsave('./figures/landsat_7/map_categories_LSWT_bottom_legend.png', map_cat_hist,
+       dpi = 300, units = 'mm', height = 400, width = 600, scale = 0.5)
+
 
 a <- ggplot(df_wtemp, aes(y = sen_slope)) +
   geom_density(size = 2, fill = 'black', alpha = 0.7) +
