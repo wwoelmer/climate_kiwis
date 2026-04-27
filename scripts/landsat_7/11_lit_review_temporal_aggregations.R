@@ -3,7 +3,7 @@ library(tidyverse)
 library(ggridges)
 library(RColorBrewer)
 
-gps <- read.csv('./data/LSWT_rates_of_change_literature.csv',
+gps <- read.csv('./data/LSWT_rates_of_change_literature_pub_April2026.csv',
                 fileEncoding = 'latin1')
 gps <- gps %>% 
   rename(rate_C_year = ï..rate_C_year)
@@ -15,7 +15,7 @@ length(unique(gps$citation))
 
 # split temporal aggregation into season and day/night
 gps <- gps %>% 
-  separate(temporal_aggregation, into = c("temporal_aggregation", "day_night"), 
+  separate(annual_seasonal_category, into = c("temporal_aggregation", "day_night"), 
            sep = " \\(|\\)", extra = "drop", fill = "right") %>% 
   mutate(day_night = ifelse(is.na(day_night), 'day', day_night))
 
@@ -23,7 +23,7 @@ gps <- gps %>%
 total_seasons <- sum(table(gps$temporal_aggregation))
 
 table(gps$temporal_aggregation)
-table(gps$aggregation_cleaned)
+table(gps$aggregation_standard)
 table(gps$day_night)
 
 # and remove the night measurements
@@ -42,7 +42,7 @@ gps_day$facet_label <- factor(gps_day$facet_label,
                               'autumn (n = 14)', 'winter (n = 16)', 
                               'dry season (n = 1)', 'pre-rainy (n = 1)', 
                               'rainy (n = 1)','post-rainy (n = 1)',
-                              'annual (n = 71)'))
+                              'annual (n = 69)'))
 
 
 
@@ -102,7 +102,7 @@ mean_season
 write.csv(mean_season, './data/output/lit_review_summary_rates.csv', row.names = FALSE)
 
 table(gps$day_night)
-27/184
+28/184
 
 # number of studies that have more than one season
 multiple_seasons <- gps %>% 
@@ -148,5 +148,5 @@ ggplot(multiple_seasons, aes(x = n_seasons, fill = season_list)) +
 
 table(multiple_seasons$n_seasons)
 gps %>% 
-  group_by(temporal_aggregation) %>% 
+  group_by(annual_seasonal_category) %>% 
   summarise(CV = sd(rate_C_year)/mean(rate_C_year))
