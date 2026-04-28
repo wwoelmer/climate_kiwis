@@ -6,7 +6,12 @@ library(rnaturalearthdata)
 library(ggpubr)
 library(ggExtra)
 
-gps <- read.csv('./data/LSWT_rates_of_change_literature.csv',
+
+# download lit review from Zenodo
+#download.file('https://zenodo.org/records/19601000/files/LSWT_rates_of_change_literature_pub_April2026.csv?download=1',
+#              './data/LSWT_rates_of_change_literature.csv')
+
+gps <- read.csv('./data/LSWT_rates_of_change_literature_pub_april2026.csv',
                 fileEncoding = 'latin1')
 gps <- gps %>% 
   rename(rate_C_year = ï..rate_C_year)
@@ -36,7 +41,7 @@ gps <- gps %>%
          !is.na(spatial_extent),
          !is.na(method_LSWT_standard),
          !is.na(n_lakes),
-         temporal_aggregation!='?')
+         annual_seasonal_category!='?')
 
 # get world shapefile
 world <- ne_countries(scale = "medium", returnclass = "sf")
