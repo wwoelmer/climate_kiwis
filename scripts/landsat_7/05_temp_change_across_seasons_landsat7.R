@@ -154,7 +154,7 @@ sen_both <- left_join(sen_seasonal, sen_annual2, by = "LID")
 
 p_a <- ggplot(sen_both, aes(x = seasonal, y = annual, color = season)) +
   geom_point(size = 2.5, alpha = 0.9) +
-  geom_smooth(method = "lm", color = "black", fill = "grey70") +
+  geom_smooth(method = "lm", color = "#7A7A7A", fill = "grey70") +
   geom_hline(yintercept = 0, size = 0.8) +
   geom_vline(xintercept = 0, size = 0.8) +
   stat_cor(aes(label = paste(..r.label..)),
@@ -232,11 +232,12 @@ ggplot(quad_sum, aes(x = category, y = percent, fill = category)) +
     axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
 
 a <- lswt_season_lines
-b <- ggarrange(p_a, p_b, common.legend = TRUE, nrow = 2,
-               labels = c('b', 'c'), legend = 'bottom')
+b <- ggarrange(p_a, 
+               labels = c('b'), legend = 'bottom')
 b
-season_plot <- ggarrange(a, b, nrow = 2, labels = c('a', '', ''))
+season_plot <- ggarrange(a, b, nrow = 2, labels = c('a', 'b'),
+                         heights = c(1.75, 1))
 season_plot
 
 ggsave('./figures/landsat_7/season_annual_trends_comparisons.png', season_plot, 
-       dpi = 300, units = 'mm', height = 600, width = 400, scale = 0.45)
+       dpi = 300, units = 'mm', height = 500, width = 400, scale = 0.45)
