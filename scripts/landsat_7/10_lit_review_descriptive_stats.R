@@ -11,7 +11,7 @@ library(MetBrewer)
 library(viridis)
 library(ggpubr)
 
-gps <- read.csv('./data/LSWT_rates_of_change_literature.csv',
+gps <- read.csv('./data/LSWT_rates_of_change_literature_pub_April2026.csv',
                 fileEncoding = 'latin1')
 gps <- gps %>% 
   rename(rate_C_year = ï..rate_C_year)
@@ -42,7 +42,7 @@ table(gps$method_LSWT)
 table(gps$method_LSWT_standard)
 table(gps$method_trend)
 table(gps$aggregation_mean_min_max_etc)
-table(gps$temporal_aggregation)
+table(gps$annual_seasonal_category)
 max(gps$n_lakes)
 median(gps$n_lakes)
 median(gps$n_years)
@@ -53,7 +53,7 @@ max(gps$rate_C_year)
 
 ## night time estimates
 night <- gps %>% 
-  separate(temporal_aggregation, into = c("temporal_aggregation", "day_night"), 
+  separate(annual_seasonal_category, into = c("temporal_aggregation", "day_night"), 
            sep = " \\(|\\)", extra = "drop", fill = "right") %>% 
   filter(day_night=='night')
 
@@ -63,7 +63,7 @@ nrow(night)
 
 # filter to lakes that we can directly compare
 sub <- gps %>% 
-  filter(annual_seasonal_data=='annual',
+  filter(annual_seasonal_category=='annual',
          aggregation_mean_min_max_etc=='mean')
 
 
@@ -99,7 +99,7 @@ length(unique(dups$title))
 no_dups <- lit %>% 
   distinct(title, .keep_all = TRUE)
 
-screened <- read.csv('./data/LSWT_rates_of_change_literature.csv')
+screened <- read.csv('./data/LSWT_rates_of_change_literature_pub_April2026.csv')
 screened <- screened %>% 
   select(paper_source:journal) %>% 
   filter(citation_short!='This study') %>% 
